@@ -23,9 +23,20 @@ h2 { font-size: 22px; margin: 0 0 8px; }
 .opt { font-size: 15px; color: #333; margin-bottom: 10px; }
 .opt select, .opt input { font-size: 16px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 8px; }
 .opt input { width: 130px; -webkit-user-select: text; user-select: text; }
+.opt input:disabled, .opt select:disabled { background: #e5e7eb; color: #6b7280; }
 .nouse { -webkit-user-select: none; user-select: none; }
-#status { font-size: 40px; font-weight: bold; margin: 16px 0; }
+#status {
+  font-size: 36px; font-weight: bold; margin: 12px 0;
+  min-height: 90px; display: flex; align-items: center; justify-content: center;
+}
 button { border: 0; border-radius: 14px; cursor: pointer; font-size: 20px; }
+#startBtn {
+  width: 100%; max-width: 460px; min-height: 64px;
+  font-size: 24px; font-weight: bold;
+  background: #2563eb; color: #fff;
+  margin-bottom: 12px;
+}
+#startBtn:disabled { background: #cbd5e1; color: #777; }
 #popupBtn {
   width: 100%; max-width: 460px; min-height: 110px;
   font-size: 30px; font-weight: bold;
@@ -71,7 +82,8 @@ button { border: 0; border-radius: 14px; cursor: pointer; font-size: 20px; }
 </div>
 
 <div class="nouse">
-  <div id="status">15.000초</div>
+  <div id="status">이름 입력 후 시작 버튼을 누르세요</div>
+  <button id="startBtn">시작</button>
   <button id="popupBtn">팝업 열기</button>
 </div>
 <div id="msg"></div>
@@ -105,17 +117,17 @@ button { border: 0; border-radius: 14px; cursor: pointer; font-size: 20px; }
 <script>
 /* ===== Firebase 설정: 본인 프로젝트 값으로 교체하세요 ===== */
 const firebaseConfig = {
-  apiKey: "AIzaSyDUT3cHkJRvKHXwaxZzisK5gHbE48PNvRs",
-  authDomain: "ticketing-practice-660ae.firebaseapp.com",
-  projectId: "ticketing-practice-660ae",
-  storageBucket: "ticketing-practice-660ae.firebasestorage.app",
-  messagingSenderId: "578839902454",
-  appId: "1:578839902454:web:6651d73ef9d35d01b714d7",
-  measurementId: "G-QF04P13GK4"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.firebasestorage.app",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 /* ======================================================= */
 
 const btn = document.getElementById("popupBtn");
+const startBtn = document.getElementById("startBtn");
 const statusEl = document.getElementById("status");
 const msgEl = document.getElementById("msg");
 const popupLayer = document.getElementById("popupLayer");
@@ -131,12 +143,13 @@ const recentList = document.getElementById("recentList");
 const boardMsg = document.getElementById("boardMsg");
 
 let timer = null;
-let active = false;
+let phase = "idle";      // idle(대기) → counting(카운트다운) → ready(활성) → done(팝업)
 let activationTime = 0;
 let earlyCount = 0;
+let hasPlayed = false;
 let records = [];
 
-/* ---------- 닉네임 (새로고침해도 유지) ---------- */
+/* ---------- 닉네임 (새로고침해도, 다음 시도에서도 유지) ---------- */
 try { nameInput.value = localStorage.getItem("ticketing_name") || ""; } catch (e) {}
 nameInput.addEventListener("input", () => {
   try { localStorage.setItem("ticketing_name", nameInput.value); } catch (e) {}
@@ -211,13 +224,31 @@ async function saveRecord(ms) {
   }
 }
 
-/* ---------- 카운트다운 ---------- */
+/* ---------- 상태 전환 ---------- */
+function setIdle() {
+  clearInterval(timer);
+  timer = null;
+  phase = "idle";
+  earlyCount = 0;
+  btn.className = "";
+  msgEl.textContent = "";
+  statusEl.textContent = "이름 입력 후 시작 버튼을 누르세요";
+  startBtn.textContent = hasPlayed ? "다시 시작" : "시작";
+  startBtn.disabled = false;
+  nameInput.disabled = false;   // 대기 중에는 이름 수정/삭제 가능
+  secSel.disabled = false;
+}
+
 function startCountdown(seconds) {
   clearInterval(timer);
-  active = false;
+  phase = "counting";
   earlyCount = 0;
   msgEl.textContent = "";
   btn.className = "";
+  startBtn.disabled = true;
+  nameInput.disabled = true;
+  secSel.disabled = true;
+  nameInput.blur();             // 키보드 닫기
 
   const endTime = performance.now() + seconds * 1000;
 
@@ -227,7 +258,7 @@ function startCountdown(seconds) {
     if (remaining <= 0) {
       clearInterval(timer);
       timer = null;
-      active = true;
+      phase = "ready";
       activationTime = performance.now();
       btn.className = "ready";
       statusEl.textContent = "지금 누르세요!";
@@ -246,17 +277,23 @@ function renderMine() {
 }
 
 function handlePress() {
-  if (!active) {
+  if (phase === "idle") {
+    msgEl.textContent = "시작 버튼을 먼저 누르세요";
+    return;
+  }
+  if (phase === "counting") {
     earlyCount++;
     btn.classList.add("early");
     msgEl.textContent = "너무 일찍 눌렀어요! (" + earlyCount + "회)";
     setTimeout(() => btn.classList.remove("early"), 150);
     return;
   }
+  if (phase !== "ready") return;
 
   const clickTime = performance.now();
   const reaction = clickTime - activationTime;
-  active = false;
+  phase = "done";
+  hasPlayed = true;
   btn.className = "";
 
   popupLayer.style.display = "flex";
@@ -279,14 +316,18 @@ function handlePress() {
 btn.addEventListener("pointerdown", (e) => { e.preventDefault(); handlePress(); });
 btn.addEventListener("click", (e) => { if (e.detail === 0) handlePress(); });
 
+startBtn.addEventListener("click", () => {
+  if (phase === "idle") startCountdown(Number(secSel.value));
+});
+
 closeBtn.addEventListener("click", () => {
   popupLayer.style.display = "none";
-  startCountdown(Number(secSel.value));
+  setIdle();                    // 닉네임은 그대로 두고 대기 상태로
 });
-secSel.addEventListener("change", () => startCountdown(Number(secSel.value)));
+
 resetBtn.addEventListener("click", () => { records = []; renderMine(); });
 
-startCountdown(Number(secSel.value));
+setIdle();
 initFirebase();
 </script>
 </body>
