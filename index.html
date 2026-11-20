@@ -4,28 +4,57 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>15초 주기 팝업</title>
+<title>티켓팅 연습</title>
 <style>
-* { box-sizing: border-box; touch-action: manipulation; }
+* {
+  box-sizing: border-box;
+  touch-action: manipulation;          /* 더블탭 확대 방지 (핀치 확대는 유지) */
+  -webkit-tap-highlight-color: transparent;
+}
 body {
   font-family: sans-serif;
   text-align: center;
-  padding: 40px 20px;
+  padding: 24px 16px 40px;
   margin: 0;
   background: #f8fafc;
+  -webkit-user-select: none;
+  user-select: none;
 }
-h2 { font-size: 22px; color: #000; }
-#status { font-size: 24px; margin: 30px 0; color: #000; }
+h2 { font-size: 22px; color: #000; margin: 0 0 8px; }
+.opt { font-size: 15px; color: #333; margin-bottom: 10px; }
+.opt select { font-size: 16px; padding: 6px 8px; }
+#status { font-size: 40px; font-weight: bold; margin: 16px 0; color: #000; }
 button {
-  padding: 15px 30px;
-  font-size: 17px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 14px;
   cursor: pointer;
-  touch-action: manipulation;
+  font-size: 20px;
 }
-#popupBtn:disabled { background: #ccc; color: #777; }
-#popupBtn:enabled, #closeBtn { background: #2563eb; color: white; }
+#popupBtn {
+  width: 100%;
+  max-width: 460px;
+  min-height: 110px;
+  font-size: 30px;
+  font-weight: bold;
+  background: #ccc;
+  color: #777;
+}
+#popupBtn.ready { background: #16a34a; color: #fff; }
+#popupBtn.early { background: #dc2626; color: #fff; }
+#msg { min-height: 26px; margin: 14px 0 6px; font-size: 17px; color: #dc2626; font-weight: bold; }
+#records {
+  max-width: 460px;
+  margin: 16px auto 0;
+  padding: 14px;
+  background: #fff;
+  border-radius: 12px;
+  font-size: 16px;
+  color: #000;
+  text-align: left;
+}
+#records .sum { font-weight: bold; margin-bottom: 8px; }
+#records ol { margin: 0; padding-left: 22px; }
+#resetBtn { margin-top: 12px; padding: 10px 16px; font-size: 14px; background: #e2e8f0; color: #333; }
 #popupLayer {
   display: none;
   position: fixed;
@@ -40,61 +69,90 @@ button {
   background: white;
   width: 100%;
   max-width: 500px;
-  padding: 35px 20px;
+  padding: 30px 20px;
   border-radius: 16px;
 }
 #elapsed {
   font-size: clamp(32px, 9vw, 46px);
   font-weight: bold;
   color: #2563eb;
-  margin: 30px 0;
+  margin: 24px 0 8px;
   word-break: keep-all;
 }
-#closeBtn { width: 100%; }
+#detail { font-size: 15px; color: #444; margin-bottom: 24px; }
+#closeBtn { width: 100%; min-height: 72px; font-size: 24px; background: #2563eb; color: #fff; }
 </style>
 </head>
 <body>
-<h2>15초 주기 팝업 버튼</h2>
+<h2>티켓팅 연습</h2>
+<div class="opt">
+  대기 시간
+  <select id="secSel">
+    <option value="5">5초</option>
+    <option value="10">10초</option>
+    <option value="15" selected>15초</option>
+    <option value="30">30초</option>
+  </select>
+</div>
+
 <div id="status">15.000초</div>
-<button id="popupBtn" disabled>팝업 열기</button>
+<button id="popupBtn">팝업 열기</button>
+<div id="msg"></div>
+
+<div id="records">
+  <div class="sum" id="sum">기록 없음</div>
+  <ol id="list"></ol>
+  <button id="resetBtn">기록 초기화</button>
+</div>
 
 <div id="popupLayer" role="dialog" aria-modal="true" aria-labelledby="popupTitle">
   <div class="popup">
     <h2 id="popupTitle">총 경과 시간</h2>
     <div id="elapsed">계산 중...</div>
+    <div id="detail"></div>
     <button id="closeBtn">닫기</button>
   </div>
 </div>
 
 <script>
 const btn = document.getElementById("popupBtn");
-const status = document.getElementById("status");
+const statusEl = document.getElementById("status");
+const msgEl = document.getElementById("msg");
 const popupLayer = document.getElementById("popupLayer");
 const elapsedElement = document.getElementById("elapsed");
+const detailEl = document.getElementById("detail");
 const closeBtn = document.getElementById("closeBtn");
+const secSel = document.getElementById("secSel");
+const sumEl = document.getElementById("sum");
+const listEl = document.getElementById("list");
+const resetBtn = document.getElementById("resetBtn");
 
 let timer = null;
 let active = false;
 let activationTime = 0;
+let earlyCount = 0;
+let records = [];   // 반응 시간(ms) 기록
 
 function startCountdown(seconds) {
   clearInterval(timer);
   active = false;
-  btn.disabled = true;
+  earlyCount = 0;
+  msgEl.textContent = "";
+  btn.className = "";
 
   const endTime = performance.now() + seconds * 1000;
 
   function update() {
     const remaining = Math.max(0, endTime - performance.now());
-    status.textContent = (remaining / 1000).toFixed(3) + "초";
+    statusEl.textContent = (remaining / 1000).toFixed(3) + "초";
 
     if (remaining <= 0) {
       clearInterval(timer);
       timer = null;
       active = true;
       activationTime = performance.now();
-      btn.disabled = false;
-      status.textContent = "활성화!";
+      btn.className = "ready";
+      statusEl.textContent = "지금 누르세요!";
     }
   }
 
@@ -102,43 +160,73 @@ function startCountdown(seconds) {
   timer = setInterval(update, 10);
 }
 
-btn.addEventListener("click", () => {
-  if (!active) return;
+function renderRecords() {
+  if (records.length === 0) {
+    sumEl.textContent = "기록 없음";
+    listEl.innerHTML = "";
+    return;
+  }
+  const best = Math.min(...records);
+  const avg = records.reduce((a, b) => a + b, 0) / records.length;
+  sumEl.textContent = "최고 " + (best / 1000).toFixed(3) + "초 · 평균 " + (avg / 1000).toFixed(3) + "초 · " + records.length + "회";
+  listEl.innerHTML = records.slice(-5).reverse()
+    .map(ms => "<li>" + (ms / 1000).toFixed(3) + "초</li>").join("");
+}
+
+function handlePress() {
+  if (!active) {
+    // 너무 일찍 누른 경우 (부정 출발)
+    earlyCount++;
+    btn.classList.add("early");
+    msgEl.textContent = "너무 일찍 눌렀어요! (" + earlyCount + "회)";
+    setTimeout(() => btn.classList.remove("early"), 150);
+    return;
+  }
 
   const clickTime = performance.now();
-  const elapsedBeforePopup = clickTime - activationTime;
+  const reaction = clickTime - activationTime;   // 활성화 후 누르기까지
+  active = false;
+  btn.className = "";
 
-  // 화면에 팝업 레이어를 표시한 뒤 다음 렌더링 프레임에서 측정
   popupLayer.style.display = "flex";
   elapsedElement.textContent = "계산 중...";
+  detailEl.textContent = "";
 
   requestAnimationFrame(() => {
-    const popupReadyTime = performance.now();
-    const popupElapsed = popupReadyTime - clickTime;
-    const totalElapsed = elapsedBeforePopup + popupElapsed;
-
-    elapsedElement.textContent = (totalElapsed / 1000).toFixed(3) + "초";
+    const popupMs = performance.now() - clickTime;  // 팝업이 화면에 뜨기까지
+    elapsedElement.textContent = ((reaction + popupMs) / 1000).toFixed(3) + "초";
+    detailEl.textContent =
+      "누르기까지 " + (reaction / 1000).toFixed(3) + "초 + 팝업 표시 " + popupMs.toFixed(0) + "ms" +
+      (earlyCount ? " · 일찍 누름 " + earlyCount + "회" : "");
   });
 
-  active = false;
-  btn.disabled = true;
+  records.push(reaction);
+  renderRecords();
+}
+
+// 터치 즉시 반응 (click보다 빠르고, 연속 터치도 모두 인식)
+btn.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  handlePress();
+});
+// 키보드(Enter/Space)로 누를 때만 click 처리
+btn.addEventListener("click", (e) => {
+  if (e.detail === 0) handlePress();
 });
 
 closeBtn.addEventListener("click", () => {
   popupLayer.style.display = "none";
-  startCountdown(15);
-
+  startCountdown(Number(secSel.value));
 });
-  
-let lastTouchEnd = 0;
-document.addEventListener("touchend", (e) => {
-  const now = Date.now();
-  if (now - lastTouchEnd <= 300) e.preventDefault();
-  lastTouchEnd = now;
-}, { passive: false });
 
-  
-startCountdown(15);
+secSel.addEventListener("change", () => startCountdown(Number(secSel.value)));
+
+resetBtn.addEventListener("click", () => {
+  records = [];
+  renderRecords();
+});
+
+startCountdown(Number(secSel.value));
 </script>
 </body>
 </html>
