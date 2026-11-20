@@ -8,7 +8,7 @@
 <style>
 * {
   box-sizing: border-box;
-  touch-action: manipulation;          /* 더블탭 확대 방지 (핀치 확대는 유지) */
+  touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
 body {
@@ -17,76 +17,51 @@ body {
   padding: 24px 16px 40px;
   margin: 0;
   background: #f8fafc;
-  -webkit-user-select: none;
-  user-select: none;
+  color: #000;
 }
-h2 { font-size: 22px; color: #000; margin: 0 0 8px; }
+h2 { font-size: 22px; margin: 0 0 8px; }
 .opt { font-size: 15px; color: #333; margin-bottom: 10px; }
-.opt select { font-size: 16px; padding: 6px 8px; }
-#status { font-size: 40px; font-weight: bold; margin: 16px 0; color: #000; }
-button {
-  border: 0;
-  border-radius: 14px;
-  cursor: pointer;
-  font-size: 20px;
-}
+.opt select, .opt input { font-size: 16px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 8px; }
+.opt input { width: 130px; -webkit-user-select: text; user-select: text; }
+.nouse { -webkit-user-select: none; user-select: none; }
+#status { font-size: 40px; font-weight: bold; margin: 16px 0; }
+button { border: 0; border-radius: 14px; cursor: pointer; font-size: 20px; }
 #popupBtn {
-  width: 100%;
-  max-width: 460px;
-  min-height: 110px;
-  font-size: 30px;
-  font-weight: bold;
-  background: #ccc;
-  color: #777;
+  width: 100%; max-width: 460px; min-height: 110px;
+  font-size: 30px; font-weight: bold;
+  background: #ccc; color: #777;
 }
 #popupBtn.ready { background: #16a34a; color: #fff; }
 #popupBtn.early { background: #dc2626; color: #fff; }
 #msg { min-height: 26px; margin: 14px 0 6px; font-size: 17px; color: #dc2626; font-weight: bold; }
-#records {
-  max-width: 460px;
-  margin: 16px auto 0;
-  padding: 14px;
-  background: #fff;
-  border-radius: 12px;
-  font-size: 16px;
-  color: #000;
-  text-align: left;
+.box {
+  max-width: 460px; margin: 14px auto 0; padding: 14px;
+  background: #fff; border-radius: 12px; font-size: 16px; text-align: left;
 }
-#records .sum { font-weight: bold; margin-bottom: 8px; }
-#records ol { margin: 0; padding-left: 22px; }
-#resetBtn { margin-top: 12px; padding: 10px 16px; font-size: 14px; background: #e2e8f0; color: #333; }
+.box h3 { margin: 0 0 8px; font-size: 17px; }
+.box ol { margin: 0; padding-left: 24px; }
+.box li { padding: 2px 0; }
+.box .me { font-weight: bold; color: #2563eb; }
+#boardMsg { font-size: 14px; color: #b45309; margin-top: 8px; }
+#resetBtn { margin-top: 10px; padding: 10px 16px; font-size: 14px; background: #e2e8f0; color: #333; }
 #popupLayer {
-  display: none;
-  position: fixed;
-  inset: 0;
+  display: none; position: fixed; inset: 0;
   background: rgba(0,0,0,.6);
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-  z-index: 1000;
+  justify-content: center; align-items: center;
+  padding: 20px; z-index: 1000;
 }
-.popup {
-  background: white;
-  width: 100%;
-  max-width: 500px;
-  padding: 30px 20px;
-  border-radius: 16px;
-}
-#elapsed {
-  font-size: clamp(32px, 9vw, 46px);
-  font-weight: bold;
-  color: #2563eb;
-  margin: 24px 0 8px;
-  word-break: keep-all;
-}
+.popup { background: white; width: 100%; max-width: 500px; padding: 30px 20px; border-radius: 16px; }
+#elapsed { font-size: clamp(32px, 9vw, 46px); font-weight: bold; color: #2563eb; margin: 24px 0 8px; word-break: keep-all; }
 #detail { font-size: 15px; color: #444; margin-bottom: 24px; }
 #closeBtn { width: 100%; min-height: 72px; font-size: 24px; background: #2563eb; color: #fff; }
 </style>
 </head>
 <body>
 <h2>티켓팅 연습</h2>
+
 <div class="opt">
-  대기 시간
+  닉네임 <input id="nameInput" maxlength="10" placeholder="익명" autocomplete="off">
+  &nbsp; 대기
   <select id="secSel">
     <option value="5">5초</option>
     <option value="10">10초</option>
@@ -95,14 +70,27 @@ button {
   </select>
 </div>
 
-<div id="status">15.000초</div>
-<button id="popupBtn">팝업 열기</button>
+<div class="nouse">
+  <div id="status">15.000초</div>
+  <button id="popupBtn">팝업 열기</button>
+</div>
 <div id="msg"></div>
 
-<div id="records">
-  <div class="sum" id="sum">기록 없음</div>
-  <ol id="list"></ol>
-  <button id="resetBtn">기록 초기화</button>
+<div class="box">
+  <h3>내 기록 (이번 접속)</h3>
+  <div id="sum">기록 없음</div>
+  <button id="resetBtn">내 기록 초기화</button>
+</div>
+
+<div class="box">
+  <h3>🏆 전체 순위 TOP 10</h3>
+  <ol id="topList"></ol>
+</div>
+
+<div class="box">
+  <h3>🕒 최근 기록 10개</h3>
+  <ol id="recentList"></ol>
+  <div id="boardMsg"></div>
 </div>
 
 <div id="popupLayer" role="dialog" aria-modal="true" aria-labelledby="popupTitle">
@@ -115,6 +103,18 @@ button {
 </div>
 
 <script>
+/* ===== Firebase 설정: 본인 프로젝트 값으로 교체하세요 ===== */
+const firebaseConfig = {
+  apiKey: "AIzaSyDUT3cHkJRvKHXwaxZzisK5gHbE48PNvRs",
+  authDomain: "ticketing-practice-660ae.firebaseapp.com",
+  projectId: "ticketing-practice-660ae",
+  storageBucket: "ticketing-practice-660ae.firebasestorage.app",
+  messagingSenderId: "578839902454",
+  appId: "1:578839902454:web:6651d73ef9d35d01b714d7",
+  measurementId: "G-QF04P13GK4"
+};
+/* ======================================================= */
+
 const btn = document.getElementById("popupBtn");
 const statusEl = document.getElementById("status");
 const msgEl = document.getElementById("msg");
@@ -124,15 +124,94 @@ const detailEl = document.getElementById("detail");
 const closeBtn = document.getElementById("closeBtn");
 const secSel = document.getElementById("secSel");
 const sumEl = document.getElementById("sum");
-const listEl = document.getElementById("list");
 const resetBtn = document.getElementById("resetBtn");
+const nameInput = document.getElementById("nameInput");
+const topList = document.getElementById("topList");
+const recentList = document.getElementById("recentList");
+const boardMsg = document.getElementById("boardMsg");
 
 let timer = null;
 let active = false;
 let activationTime = 0;
 let earlyCount = 0;
-let records = [];   // 반응 시간(ms) 기록
+let records = [];
 
+/* ---------- 닉네임 (새로고침해도 유지) ---------- */
+try { nameInput.value = localStorage.getItem("ticketing_name") || ""; } catch (e) {}
+nameInput.addEventListener("input", () => {
+  try { localStorage.setItem("ticketing_name", nameInput.value); } catch (e) {}
+});
+function getName() {
+  return nameInput.value.trim().slice(0, 10) || "익명";
+}
+
+/* ---------- Firebase (실패해도 연습은 가능) ---------- */
+let db = null;
+let fs = null;
+
+function renderBoard(ol, snap) {
+  ol.innerHTML = "";
+  if (snap.empty) {
+    const li = document.createElement("li");
+    li.textContent = "아직 기록이 없어요";
+    ol.appendChild(li);
+    return;
+  }
+  snap.forEach((doc) => {
+    const d = doc.data();
+    const li = document.createElement("li");
+    li.textContent = d.name + "  " + (d.ms / 1000).toFixed(3) + "초";
+    if (d.name === getName()) li.className = "me";
+    ol.appendChild(li);
+  });
+}
+
+async function initFirebase() {
+  if (!firebaseConfig.apiKey || firebaseConfig.apiKey.startsWith("YOUR_")) {
+    boardMsg.textContent = "Firebase 설정 전이라 기록이 공유되지 않아요.";
+    return;
+  }
+  try {
+    const V = "10.12.2";
+    const [appMod, fsMod] = await Promise.all([
+      import("https://www.gstatic.com/firebasejs/" + V + "/firebase-app.js"),
+      import("https://www.gstatic.com/firebasejs/" + V + "/firebase-firestore.js")
+    ]);
+    const app = appMod.initializeApp(firebaseConfig);
+    db = fsMod.getFirestore(app);
+    fs = fsMod;
+    const col = fs.collection(db, "records");
+
+    fs.onSnapshot(
+      fs.query(col, fs.orderBy("ms", "asc"), fs.limit(10)),
+      (snap) => renderBoard(topList, snap),
+      (err) => { boardMsg.textContent = "순위 불러오기 실패: " + err.code; }
+    );
+    fs.onSnapshot(
+      fs.query(col, fs.orderBy("createdAt", "desc"), fs.limit(10)),
+      (snap) => renderBoard(recentList, snap),
+      (err) => { boardMsg.textContent = "최근 기록 불러오기 실패: " + err.code; }
+    );
+  } catch (e) {
+    boardMsg.textContent = "Firebase 연결 실패: " + e.message;
+  }
+}
+
+async function saveRecord(ms) {
+  if (!db) return;
+  try {
+    await fs.addDoc(fs.collection(db, "records"), {
+      name: getName(),
+      ms: Math.round(ms),
+      createdAt: fs.serverTimestamp()
+    });
+    boardMsg.textContent = "";
+  } catch (e) {
+    boardMsg.textContent = "기록 저장 실패: " + (e.code || e.message);
+  }
+}
+
+/* ---------- 카운트다운 ---------- */
 function startCountdown(seconds) {
   clearInterval(timer);
   active = false;
@@ -145,7 +224,6 @@ function startCountdown(seconds) {
   function update() {
     const remaining = Math.max(0, endTime - performance.now());
     statusEl.textContent = (remaining / 1000).toFixed(3) + "초";
-
     if (remaining <= 0) {
       clearInterval(timer);
       timer = null;
@@ -155,27 +233,20 @@ function startCountdown(seconds) {
       statusEl.textContent = "지금 누르세요!";
     }
   }
-
   update();
   timer = setInterval(update, 10);
 }
 
-function renderRecords() {
-  if (records.length === 0) {
-    sumEl.textContent = "기록 없음";
-    listEl.innerHTML = "";
-    return;
-  }
+function renderMine() {
+  if (records.length === 0) { sumEl.textContent = "기록 없음"; return; }
   const best = Math.min(...records);
   const avg = records.reduce((a, b) => a + b, 0) / records.length;
-  sumEl.textContent = "최고 " + (best / 1000).toFixed(3) + "초 · 평균 " + (avg / 1000).toFixed(3) + "초 · " + records.length + "회";
-  listEl.innerHTML = records.slice(-5).reverse()
-    .map(ms => "<li>" + (ms / 1000).toFixed(3) + "초</li>").join("");
+  sumEl.textContent = "최고 " + (best / 1000).toFixed(3) + "초 · 평균 " +
+    (avg / 1000).toFixed(3) + "초 · " + records.length + "회";
 }
 
 function handlePress() {
   if (!active) {
-    // 너무 일찍 누른 경우 (부정 출발)
     earlyCount++;
     btn.classList.add("early");
     msgEl.textContent = "너무 일찍 눌렀어요! (" + earlyCount + "회)";
@@ -184,7 +255,7 @@ function handlePress() {
   }
 
   const clickTime = performance.now();
-  const reaction = clickTime - activationTime;   // 활성화 후 누르기까지
+  const reaction = clickTime - activationTime;
   active = false;
   btn.className = "";
 
@@ -193,7 +264,7 @@ function handlePress() {
   detailEl.textContent = "";
 
   requestAnimationFrame(() => {
-    const popupMs = performance.now() - clickTime;  // 팝업이 화면에 뜨기까지
+    const popupMs = performance.now() - clickTime;
     elapsedElement.textContent = ((reaction + popupMs) / 1000).toFixed(3) + "초";
     detailEl.textContent =
       "누르기까지 " + (reaction / 1000).toFixed(3) + "초 + 팝업 표시 " + popupMs.toFixed(0) + "ms" +
@@ -201,32 +272,22 @@ function handlePress() {
   });
 
   records.push(reaction);
-  renderRecords();
+  renderMine();
+  saveRecord(reaction);
 }
 
-// 터치 즉시 반응 (click보다 빠르고, 연속 터치도 모두 인식)
-btn.addEventListener("pointerdown", (e) => {
-  e.preventDefault();
-  handlePress();
-});
-// 키보드(Enter/Space)로 누를 때만 click 처리
-btn.addEventListener("click", (e) => {
-  if (e.detail === 0) handlePress();
-});
+btn.addEventListener("pointerdown", (e) => { e.preventDefault(); handlePress(); });
+btn.addEventListener("click", (e) => { if (e.detail === 0) handlePress(); });
 
 closeBtn.addEventListener("click", () => {
   popupLayer.style.display = "none";
   startCountdown(Number(secSel.value));
 });
-
 secSel.addEventListener("change", () => startCountdown(Number(secSel.value)));
-
-resetBtn.addEventListener("click", () => {
-  records = [];
-  renderRecords();
-});
+resetBtn.addEventListener("click", () => { records = []; renderMine(); });
 
 startCountdown(Number(secSel.value));
+initFirebase();
 </script>
 </body>
 </html>
