@@ -127,8 +127,17 @@ btn.addEventListener("click", () => {
 closeBtn.addEventListener("click", () => {
   popupLayer.style.display = "none";
   startCountdown(15);
-});
 
+});
+  
+let lastTouchEnd = 0;
+document.addEventListener("touchend", (e) => {
+  const now = Date.now();
+  if (now - lastTouchEnd <= 300) e.preventDefault();
+  lastTouchEnd = now;
+}, { passive: false });
+
+  
 startCountdown(15);
 </script>
 </body>
