@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>15초 주기 팝업</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  font-family: sans-serif;
+  text-align: center;
+  padding: 40px 20px;
+  margin: 0;
+  background: #f8fafc;
+}
+h2 { font-size: 22px; color: #000; }
+#status { font-size: 24px; margin: 30px 0; color: #000; }
+button {
+  padding: 15px 30px;
+  font-size: 17px;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+#popupBtn:disabled { background: #ccc; color: #777; }
+#popupBtn:enabled, #closeBtn { background: #2563eb; color: white; }
+#popupLayer {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.6);
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  z-index: 1000;
+}
+.popup {
+  background: white;
+  width: 100%;
+  max-width: 500px;
+  padding: 35px 20px;
+  border-radius: 16px;
+}
+#elapsed {
+  font-size: clamp(32px, 9vw, 46px);
+  font-weight: bold;
+  color: #2563eb;
+  margin: 30px 0;
+  word-break: keep-all;
+}
+#closeBtn { width: 100%; }
+</style>
+</head>
+<body>
+<h2>15초 주기 팝업 버튼</h2>
+<div id="status">15.000초</div>
+<button id="popupBtn" disabled>팝업 열기</button>
+
+<div id="popupLayer" role="dialog" aria-modal="true" aria-labelledby="popupTitle">
+  <div class="popup">
+    <h2 id="popupTitle">총 경과 시간</h2>
+    <div id="elapsed">계산 중...</div>
+    <button id="closeBtn">닫기</button>
+  </div>
+</div>
+
+<script>
+const btn = document.getElementById("popupBtn");
+const status = document.getElementById("status");
+const popupLayer = document.getElementById("popupLayer");
+const elapsedElement = document.getElementById("elapsed");
+const closeBtn = document.getElementById("closeBtn");
+
+let timer = null;
+let active = false;
+let activationTime = 0;
+
+function startCountdown(seconds) {
+  clearInterval(timer);
+  active = false;
+  btn.disabled = true;
+
+  const endTime = performance.now() + seconds * 1000;
+
+  function update() {
+    const remaining = Math.max(0, endTime - performance.now());
+    status.textContent = (remaining / 1000).toFixed(3) + "초";
+
+    if (remaining <= 0) {
+      clearInterval(timer);
+      timer = null;
+      active = true;
+      activationTime = performance.now();
+      btn.disabled = false;
+      status.textContent = "활성화!";
+    }
+  }
+
+  update();
+  timer = setInterval(update, 10);
+}
+
+btn.addEventListener("click", () => {
+  if (!active) return;
+
+  const clickTime = performance.now();
+  const elapsedBeforePopup = clickTime - activationTime;
+
+  // 화면에 팝업 레이어를 표시한 뒤 다음 렌더링 프레임에서 측정
+  popupLayer.style.display = "flex";
+  elapsedElement.textContent = "계산 중...";
+
+  requestAnimationFrame(() => {
+    const popupReadyTime = performance.now();
+    const popupElapsed = popupReadyTime - clickTime;
+    const totalElapsed = elapsedBeforePopup + popupElapsed;
+
+    elapsedElement.textContent = (totalElapsed / 1000).toFixed(3) + "초";
+  });
+
+  active = false;
+  btn.disabled = true;
+});
+
+closeBtn.addEventListener("click", () => {
+  popupLayer.style.display = "none";
+  startCountdown(15);
+});
+
+startCountdown(15);
+</script>
+</body>
+</html>
