@@ -19,24 +19,51 @@ body {
   background: #f8fafc;
   color: #000;
 }
-h2 { font-size: 22px; margin: 0 0 8px; }
-.opt { font-size: 15px; color: #333; margin-bottom: 10px; }
-.opt select, .opt input { font-size: 16px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 8px; }
-.opt input { width: 130px; -webkit-user-select: text; user-select: text; }
-.opt input:disabled, .opt select:disabled { background: #e5e7eb; color: #6b7280; }
+h2 { font-size: 22px; margin: 0 0 12px; }
+
+/* 닉네임 / 대기 / 시작 버튼 한 줄 */
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: 5px;
+  max-width: 460px;
+  margin: 0 auto;
+  font-size: 13px;
+  color: #333;
+}
+.row label { white-space: nowrap; }
+.row input, .row select {
+  font-size: 15px;
+  padding: 8px 6px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  min-width: 0;
+}
+.row input { flex: 1 1 auto; width: 70px; -webkit-user-select: text; user-select: text; }
+.row select { flex: 0 0 auto; }
+.row input:disabled, .row select:disabled { background: #e5e7eb; color: #6b7280; }
+#startBtn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  padding: 0 10px;
+  min-height: 40px;
+  font-size: 15px;
+  font-weight: bold;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff;
+}
+#startBtn:disabled { background: #cbd5e1; color: #777; }
+
 .nouse { -webkit-user-select: none; user-select: none; }
 #status {
   font-size: 36px; font-weight: bold; margin: 12px 0;
   min-height: 90px; display: flex; align-items: center; justify-content: center;
 }
+#status.idle { font-size: clamp(14px, 4.8vw, 24px); white-space: nowrap; }
 button { border: 0; border-radius: 14px; cursor: pointer; font-size: 20px; }
-#startBtn {
-  width: 100%; max-width: 460px; min-height: 64px;
-  font-size: 24px; font-weight: bold;
-  background: #2563eb; color: #fff;
-  margin-bottom: 12px;
-}
-#startBtn:disabled { background: #cbd5e1; color: #777; }
 #popupBtn {
   width: 100%; max-width: 460px; min-height: 110px;
   font-size: 30px; font-weight: bold;
@@ -66,24 +93,27 @@ button { border: 0; border-radius: 14px; cursor: pointer; font-size: 20px; }
 #detail { font-size: 15px; color: #444; margin-bottom: 24px; }
 #closeBtn { width: 100%; min-height: 72px; font-size: 24px; background: #2563eb; color: #fff; }
 </style>
+<!-- Firebase 설정값은 별도 파일(firebase-config.js)에서 불러옵니다 -->
+<script src="firebase-config.js"></script>
 </head>
 <body>
 <h2>티켓팅 연습</h2>
 
-<div class="opt">
-  닉네임 <input id="nameInput" maxlength="10" placeholder="익명" autocomplete="off">
-  &nbsp; 대기
+<div class="row">
+  <label for="nameInput">닉네임</label>
+  <input id="nameInput" maxlength="10" placeholder="익명" autocomplete="off">
+  <label for="secSel">대기</label>
   <select id="secSel">
     <option value="5">5초</option>
     <option value="10">10초</option>
     <option value="15" selected>15초</option>
     <option value="30">30초</option>
   </select>
+  <button id="startBtn">시작</button>
 </div>
 
 <div class="nouse">
-  <div id="status">이름 입력 후 시작 버튼을 누르세요</div>
-  <button id="startBtn">시작</button>
+  <div id="status" class="idle">이름 입력 후 시작 버튼을 누르세요</div>
   <button id="popupBtn">팝업 열기</button>
 </div>
 <div id="msg"></div>
@@ -115,16 +145,7 @@ button { border: 0; border-radius: 14px; cursor: pointer; font-size: 20px; }
 </div>
 
 <script>
-/* ===== Firebase 설정: 본인 프로젝트 값으로 교체하세요 ===== */
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.firebasestorage.app",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
-/* ======================================================= */
+const cfg = (typeof firebaseConfig !== "undefined") ? firebaseConfig : null;
 
 const btn = document.getElementById("popupBtn");
 const startBtn = document.getElementById("startBtn");
@@ -180,8 +201,8 @@ function renderBoard(ol, snap) {
 }
 
 async function initFirebase() {
-  if (!firebaseConfig.apiKey || firebaseConfig.apiKey.startsWith("YOUR_")) {
-    boardMsg.textContent = "Firebase 설정 전이라 기록이 공유되지 않아요.";
+  if (!cfg || !cfg.apiKey || cfg.apiKey.startsWith("YOUR_")) {
+    boardMsg.textContent = "firebase-config.js에 Firebase 설정값이 아직 없어서 기록이 공유되지 않아요.";
     return;
   }
   try {
@@ -190,7 +211,7 @@ async function initFirebase() {
       import("https://www.gstatic.com/firebasejs/" + V + "/firebase-app.js"),
       import("https://www.gstatic.com/firebasejs/" + V + "/firebase-firestore.js")
     ]);
-    const app = appMod.initializeApp(firebaseConfig);
+    const app = appMod.initializeApp(cfg);
     db = fsMod.getFirestore(app);
     fs = fsMod;
     const col = fs.collection(db, "records");
@@ -232,6 +253,7 @@ function setIdle() {
   earlyCount = 0;
   btn.className = "";
   msgEl.textContent = "";
+  statusEl.className = "idle";
   statusEl.textContent = "이름 입력 후 시작 버튼을 누르세요";
   startBtn.textContent = hasPlayed ? "다시 시작" : "시작";
   startBtn.disabled = false;
@@ -245,6 +267,7 @@ function startCountdown(seconds) {
   earlyCount = 0;
   msgEl.textContent = "";
   btn.className = "";
+  statusEl.className = "";
   startBtn.disabled = true;
   nameInput.disabled = true;
   secSel.disabled = true;
@@ -322,7 +345,7 @@ startBtn.addEventListener("click", () => {
 
 closeBtn.addEventListener("click", () => {
   popupLayer.style.display = "none";
-  setIdle();                    // 닉네임은 그대로 두고 대기 상태로
+  setIdle();
 });
 
 resetBtn.addEventListener("click", () => { records = []; renderMine(); });
