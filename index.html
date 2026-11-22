@@ -11,129 +11,215 @@
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
+[hidden] { display: none !important; }
 body {
   font-family: sans-serif;
-  text-align: center;
-  padding: 24px 16px 40px;
   margin: 0;
   background: #f8fafc;
   color: #000;
 }
-h2 { font-size: 22px; margin: 0 0 12px; }
+button { border: 0; border-radius: 12px; cursor: pointer; font-size: 18px; font-family: inherit; }
+input, select {
+  font-size: 16px; padding: 12px; width: 100%;
+  border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; font-family: inherit;
+}
+input:disabled, select:disabled { background: #e5e7eb; color: #6b7280; }
 
-/* 닉네임 / 대기 / 시작 버튼 한 줄 */
-.row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: nowrap;
-  gap: 5px;
-  max-width: 460px;
-  margin: 0 auto;
-  font-size: 13px;
-  color: #333;
+/* 상단바 */
+#topbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 12px 6px 16px;
+  background: #f8fafc; border-bottom: 1px solid #e2e8f0;
+  min-height: 56px;
 }
-.row label { white-space: nowrap; }
-.row input, .row select {
-  font-size: 15px;
-  padding: 8px 6px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  min-width: 0;
+#topbar .title { font-size: 20px; font-weight: bold; }
+#menuBtn { width: 44px; height: 44px; font-size: 26px; background: transparent; color: #111; padding: 0; }
+#backdrop { position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,.25); }
+#menu {
+  position: fixed; top: 54px; right: 10px; z-index: 70; min-width: 170px;
+  background: #fff; border-radius: 12px; box-shadow: 0 6px 24px rgba(0,0,0,.2); overflow: hidden;
 }
-.row input { flex: 1 1 auto; width: 70px; -webkit-user-select: text; user-select: text; }
-.row select { flex: 0 0 auto; }
-.row input:disabled, .row select:disabled { background: #e5e7eb; color: #6b7280; }
-#startBtn {
-  flex: 0 0 auto;
-  white-space: nowrap;
-  padding: 0 10px;
-  min-height: 40px;
-  font-size: 15px;
-  font-weight: bold;
-  border-radius: 8px;
-  background: #2563eb;
-  color: #fff;
-}
+#menu button { display: block; width: 100%; text-align: left; padding: 16px 18px; border-radius: 0; background: #fff; color: #111; font-size: 17px; }
+#menu button + button { border-top: 1px solid #eef2f7; }
+#menu .danger { color: #dc2626; }
+
+main { max-width: 520px; margin: 0 auto; padding: 18px 16px 40px; text-align: center; }
+h2 { font-size: 22px; margin: 6px 0 16px; }
+.field { margin-bottom: 12px; text-align: left; }
+.field label { display: block; font-size: 14px; color: #475569; margin-bottom: 6px; }
+.inline { display: flex; gap: 8px; }
+.inline button { flex: none; padding: 0 14px; background: #e2e8f0; color: #111; font-size: 15px; }
+.err { color: #dc2626; font-size: 15px; min-height: 22px; margin: 6px 0; font-weight: bold; text-align: left; }
+.ok { color: #16a34a; }
+.hint { font-size: 13px; color: #64748b; margin-top: 6px; text-align: left; }
+.pri { background: #2563eb; color: #fff; }
+.big { width: 100%; min-height: 54px; font-size: 19px; font-weight: bold; }
+.link { background: transparent; color: #2563eb; font-size: 16px; padding: 12px; text-decoration: underline; }
+.back { background: transparent; color: #2563eb; font-size: 16px; padding: 6px 0; text-align: left; display: block; margin-bottom: 8px; }
+.chk { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #475569; margin: 6px 0 12px; text-align: left; }
+.chk input { width: 18px; height: 18px; }
+
+/* 구단 선택 */
+.teams { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.team { display: flex; align-items: center; gap: 8px; padding: 12px; background: #fff; border: 2px solid #e2e8f0; color: #111; font-size: 15px; text-align: left; }
+.team.sel { border-color: #2563eb; background: #eff6ff; font-weight: bold; }
+.dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; flex: none; background: #94a3b8; }
+
+/* 티켓팅 */
+.chip { display: inline-flex; align-items: center; gap: 8px; background: #fff; border-radius: 999px; padding: 8px 14px; font-size: 15px; margin-bottom: 12px; }
+.row { display: flex; align-items: center; justify-content: center; gap: 8px; max-width: 460px; margin: 0 auto; font-size: 14px; color: #333; }
+.row select { width: auto; padding: 10px 8px; font-size: 16px; }
+#startBtn { flex: none; white-space: nowrap; padding: 0 16px; min-height: 44px; font-size: 16px; font-weight: bold; border-radius: 10px; background: #2563eb; color: #fff; }
 #startBtn:disabled { background: #cbd5e1; color: #777; }
-
 .nouse { -webkit-user-select: none; user-select: none; }
-#status {
-  font-size: 36px; font-weight: bold; margin: 12px 0;
-  min-height: 90px; display: flex; align-items: center; justify-content: center;
-}
+#status { font-size: 36px; font-weight: bold; margin: 12px 0; min-height: 90px; display: flex; align-items: center; justify-content: center; }
 #status.idle { font-size: clamp(14px, 4.8vw, 24px); white-space: nowrap; }
-button { border: 0; border-radius: 14px; cursor: pointer; font-size: 20px; }
-#popupBtn {
-  width: 100%; max-width: 460px; min-height: 110px;
-  font-size: 30px; font-weight: bold;
-  background: #ccc; color: #777;
-}
+#popupBtn { width: 100%; max-width: 460px; min-height: 110px; font-size: 30px; font-weight: bold; background: #ccc; color: #777; border-radius: 14px; }
 #popupBtn.ready { background: #16a34a; color: #fff; }
 #popupBtn.early { background: #dc2626; color: #fff; }
 #msg { min-height: 26px; margin: 14px 0 6px; font-size: 17px; color: #dc2626; font-weight: bold; }
-.box {
-  max-width: 460px; margin: 14px auto 0; padding: 14px;
-  background: #fff; border-radius: 12px; font-size: 16px; text-align: left;
-}
+.box { margin: 14px auto 0; padding: 14px; background: #fff; border-radius: 12px; font-size: 16px; text-align: left; }
 .box h3 { margin: 0 0 8px; font-size: 17px; }
 .box ol { margin: 0; padding-left: 24px; }
-.box li { padding: 2px 0; }
+.box li { padding: 3px 0; }
+.box li .dot { margin-right: 6px; }
 .box .me { font-weight: bold; color: #2563eb; }
 #boardMsg { font-size: 14px; color: #b45309; margin-top: 8px; }
-#resetBtn { margin-top: 10px; padding: 10px 16px; font-size: 14px; background: #e2e8f0; color: #333; }
-#popupLayer {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,.6);
-  justify-content: center; align-items: center;
-  padding: 20px; z-index: 1000;
-}
-.popup { background: white; width: 100%; max-width: 500px; padding: 30px 20px; border-radius: 16px; }
+
+/* 마이페이지 / 기록 */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0; }
+.stat { background: #f1f5f9; border-radius: 10px; padding: 12px 4px; }
+.stat b { display: block; font-size: 18px; margin-top: 4px; }
+.stat span { font-size: 13px; color: #64748b; }
+.rec { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eef2f7; font-size: 16px; }
+.rec:last-child { border-bottom: 0; }
+.rec .d { color: #64748b; font-size: 14px; }
+.rec.best { font-weight: bold; color: #2563eb; }
+
+/* 팝업 */
+#popupLayer { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); justify-content: center; align-items: center; padding: 20px; z-index: 1000; }
+.popup { background: white; width: 100%; max-width: 500px; padding: 30px 20px; border-radius: 16px; text-align: center; }
 #elapsed { font-size: clamp(32px, 9vw, 46px); font-weight: bold; color: #2563eb; margin: 24px 0 8px; word-break: keep-all; }
 #detail { font-size: 15px; color: #444; margin-bottom: 24px; }
 #closeBtn { width: 100%; min-height: 72px; font-size: 24px; background: #2563eb; color: #fff; }
 </style>
-<!-- Firebase 설정값은 별도 파일(firebase-config.js)에서 불러옵니다 -->
 <script src="firebase-config.js"></script>
 </head>
 <body>
-<h2>티켓팅 연습</h2>
 
-<div class="row">
-  <label for="nameInput">닉네임</label>
-  <input id="nameInput" maxlength="10" placeholder="익명" autocomplete="off">
-  <label for="secSel">대기</label>
-  <select id="secSel">
-    <option value="5">5초</option>
-    <option value="10">10초</option>
-    <option value="15" selected>15초</option>
-    <option value="30">30초</option>
-  </select>
-  <button id="startBtn">시작</button>
+<header id="topbar">
+  <div class="title">🎟️ 티켓팅 연습</div>
+  <button id="menuBtn" aria-label="메뉴" hidden>☰</button>
+</header>
+
+<div id="menuWrap" hidden>
+  <div id="backdrop"></div>
+  <nav id="menu">
+    <button id="mMy">마이페이지</button>
+    <button id="mRec">기록 보기</button>
+    <button id="mOut" class="danger">로그아웃</button>
+  </nav>
 </div>
 
-<div class="nouse">
-  <div id="status" class="idle">이름 입력 후 시작 버튼을 누르세요</div>
-  <button id="popupBtn">팝업 열기</button>
-</div>
-<div id="msg"></div>
+<main>
+  <!-- 로딩 -->
+  <section id="vLoading" class="view"><p>불러오는 중…</p><div id="cfgMsg" class="err"></div></section>
 
-<div class="box">
-  <h3>내 기록 (이번 접속)</h3>
-  <div id="sum">기록 없음</div>
-  <button id="resetBtn">내 기록 초기화</button>
-</div>
+  <!-- 로그인 -->
+  <section id="vLogin" class="view" hidden>
+    <h2>로그인</h2>
+    <form id="fLogin">
+      <div class="field"><label for="lNick">닉네임</label><input id="lNick" maxlength="10" autocomplete="username" autocapitalize="none"></div>
+      <div class="field"><label for="lPw">비밀번호</label><input id="lPw" type="password" autocomplete="current-password"></div>
+      <div class="err" id="lErr"></div>
+      <button class="pri big" id="lBtn" type="submit">로그인</button>
+    </form>
+    <button class="link" id="toSignup" type="button">회원가입</button>
+  </section>
 
-<div class="box">
-  <h3>🏆 전체 순위 TOP 10</h3>
-  <ol id="topList"></ol>
-</div>
+  <!-- 회원가입 -->
+  <section id="vSignup" class="view" hidden>
+    <button class="back" id="toLogin" type="button">← 로그인으로</button>
+    <h2>회원가입</h2>
+    <form id="fSignup">
+      <div class="field">
+        <label for="sNick">닉네임</label>
+        <div class="inline"><input id="sNick" maxlength="10" autocomplete="username" autocapitalize="none"><button type="button" id="chkBtn">중복확인</button></div>
+        <div class="hint">한글·영문·숫자·_ 2~10자</div>
+        <div class="err" id="nickStat" style="min-height:20px;margin:4px 0 0"></div>
+      </div>
+      <div class="field">
+        <label for="sPw">비밀번호</label>
+        <input id="sPw" type="password" autocomplete="new-password">
+        <div class="hint">6자 이상</div>
+      </div>
+      <label class="chk"><input type="checkbox" id="showPw"> 비밀번호 보기</label>
+      <div class="field">
+        <label>본인 구단</label>
+        <div class="teams" id="teamGrid"></div>
+      </div>
+      <div class="err" id="sErr"></div>
+      <button class="pri big" id="sBtn" type="submit">가입하기</button>
+    </form>
+  </section>
 
-<div class="box">
-  <h3>🕒 최근 기록 10개</h3>
-  <ol id="recentList"></ol>
-  <div id="boardMsg"></div>
-</div>
+  <!-- 티켓팅 -->
+  <section id="vTicket" class="view" hidden>
+    <div class="chip" id="meChip"></div>
+    <div class="row">
+      <label for="secSel">대기</label>
+      <select id="secSel">
+        <option value="5">5초</option>
+        <option value="10">10초</option>
+        <option value="15" selected>15초</option>
+        <option value="30">30초</option>
+      </select>
+      <button id="startBtn">시작</button>
+    </div>
+    <div class="nouse">
+      <div id="status" class="idle">시작 버튼을 누르세요</div>
+      <button id="popupBtn">팝업 열기</button>
+    </div>
+    <div id="msg"></div>
+
+    <div class="box"><h3>🏆 전체 순위 TOP 10</h3><ol id="topList"></ol></div>
+    <div class="box"><h3>🕒 최근 기록 10개</h3><ol id="recentList"></ol><div id="boardMsg"></div></div>
+  </section>
+
+  <!-- 마이페이지 -->
+  <section id="vMy" class="view" hidden>
+    <button class="back" data-go="ticket" type="button">← 티켓팅 화면</button>
+    <h2>마이페이지</h2>
+    <div class="box">
+      <div class="field"><label>닉네임</label><div id="myNick" style="font-size:20px;font-weight:bold"></div></div>
+      <div class="field">
+        <label for="myTeam">본인 구단</label>
+        <div class="inline"><select id="myTeam"></select><button type="button" id="teamSave" class="pri">변경</button></div>
+        <div class="err" id="myMsg" style="min-height:20px;margin:6px 0 0"></div>
+      </div>
+    </div>
+    <div class="box">
+      <h3>내 기록 요약</h3>
+      <div class="stats">
+        <div class="stat"><span>참여</span><b id="stCnt">-</b></div>
+        <div class="stat"><span>최고</span><b id="stBest">-</b></div>
+        <div class="stat"><span>평균</span><b id="stAvg">-</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 기록 보기 -->
+  <section id="vRecords" class="view" hidden>
+    <button class="back" data-go="ticket" type="button">← 티켓팅 화면</button>
+    <h2>내 기록</h2>
+    <div class="box">
+      <div id="recSum" style="font-weight:bold;margin-bottom:6px"></div>
+      <div id="recList"></div>
+      <div class="err" id="recMsg"></div>
+    </div>
+  </section>
+</main>
 
 <div id="popupLayer" role="dialog" aria-modal="true" aria-labelledby="popupTitle">
   <div class="popup">
@@ -145,144 +231,374 @@ button { border: 0; border-radius: 14px; cursor: pointer; font-size: 20px; }
 </div>
 
 <script>
+const $ = (id) => document.getElementById(id);
 const cfg = (typeof firebaseConfig !== "undefined") ? firebaseConfig : null;
 
-const btn = document.getElementById("popupBtn");
-const startBtn = document.getElementById("startBtn");
-const statusEl = document.getElementById("status");
-const msgEl = document.getElementById("msg");
-const popupLayer = document.getElementById("popupLayer");
-const elapsedElement = document.getElementById("elapsed");
-const detailEl = document.getElementById("detail");
-const closeBtn = document.getElementById("closeBtn");
-const secSel = document.getElementById("secSel");
-const sumEl = document.getElementById("sum");
-const resetBtn = document.getElementById("resetBtn");
-const nameInput = document.getElementById("nameInput");
-const topList = document.getElementById("topList");
-const recentList = document.getElementById("recentList");
-const boardMsg = document.getElementById("boardMsg");
-
-let timer = null;
-let phase = "idle";      // idle(대기) → counting(카운트다운) → ready(활성) → done(팝업)
-let activationTime = 0;
-let earlyCount = 0;
-let hasPlayed = false;
-let records = [];
-
-/* ---------- 닉네임 (새로고침해도, 다음 시도에서도 유지) ---------- */
-try { nameInput.value = localStorage.getItem("ticketing_name") || ""; } catch (e) {}
-nameInput.addEventListener("input", () => {
-  try { localStorage.setItem("ticketing_name", nameInput.value); } catch (e) {}
-});
-function getName() {
-  return nameInput.value.trim().slice(0, 10) || "익명";
+/* ================= 구단 ================= */
+const TEAMS = [
+  { n: "KIA 타이거즈", c: "#EA0029" },
+  { n: "삼성 라이온즈", c: "#074CA1" },
+  { n: "LG 트윈스", c: "#C30452" },
+  { n: "두산 베어스", c: "#131230" },
+  { n: "kt wiz", c: "#1c1c1c" },
+  { n: "SSG 랜더스", c: "#CE0E2D" },
+  { n: "롯데 자이언츠", c: "#041E42" },
+  { n: "한화 이글스", c: "#FC4E00" },
+  { n: "NC 다이노스", c: "#315288" },
+  { n: "키움 히어로즈", c: "#570514" }
+];
+const teamColor = (n) => (TEAMS.find((t) => t.n === n) || {}).c || "#94a3b8";
+function dotEl(team) {
+  const s = document.createElement("span");
+  s.className = "dot";
+  s.style.background = teamColor(team);
+  return s;
 }
 
-/* ---------- Firebase (실패해도 연습은 가능) ---------- */
-let db = null;
-let fs = null;
+/* ================= 화면 전환 ================= */
+const VIEWS = { loading: "vLoading", login: "vLogin", signup: "vSignup", ticket: "vTicket", my: "vMy", records: "vRecords" };
+let CUR = "loading";
+function show(name) {
+  if (CUR === "ticket" && name !== "ticket") leaveTicket();
+  CUR = name;
+  Object.keys(VIEWS).forEach((k) => { $(VIEWS[k]).hidden = (k !== name); });
+  closeMenu();
+  window.scrollTo(0, 0);
+}
+function closeMenu() { $("menuWrap").hidden = true; }
+$("menuBtn").addEventListener("click", () => { $("menuWrap").hidden = !$("menuWrap").hidden; });
+$("backdrop").addEventListener("click", closeMenu);
+document.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => show(b.dataset.go)));
 
-function renderBoard(ol, snap) {
-  ol.innerHTML = "";
-  if (snap.empty) {
-    const li = document.createElement("li");
-    li.textContent = "아직 기록이 없어요";
-    ol.appendChild(li);
+/* ================= Firebase ================= */
+let db = null, auth = null, FS = null, AU = null;
+let ME = null;            // { uid, nickname, team }
+let SIGNUP = false;       // 가입 처리 중에는 인증 상태 변화 무시
+let PENDING_MSG = "";
+
+function cfgErr(m) { $("cfgMsg").textContent = m; }
+
+async function initFirebase() {
+  if (!cfg || !cfg.apiKey || String(cfg.apiKey).startsWith("YOUR_")) {
+    cfgErr("firebase-config.js에 Firebase 설정값이 없어요.");
     return;
   }
+  try {
+    const B = "https://www.gstatic.com/firebasejs/10.12.2/";
+    const [A, F, AUm] = await Promise.all([
+      import(B + "firebase-app.js"),
+      import(B + "firebase-firestore.js"),
+      import(B + "firebase-auth.js")
+    ]);
+    const app = A.initializeApp(cfg);
+    db = F.getFirestore(app); FS = F;
+    auth = AUm.getAuth(app); AU = AUm;
+    startBoards();
+    AU.onAuthStateChanged(auth, onAuth);
+  } catch (e) {
+    cfgErr("Firebase 연결 실패: " + e.message);
+  }
+}
+
+/* ---- 닉네임 → 내부 이메일 (닉네임만으로 가입하기 위한 방식) ---- */
+const nickKey = (n) => n.normalize("NFC").toLowerCase();
+const hexOf = (s) => [...new TextEncoder().encode(s)].map((b) => b.toString(16).padStart(2, "0")).join("");
+const emailOf = (n) => "u" + hexOf(nickKey(n)) + "@ticketing-practice.app";
+const validNick = (n) => /^[0-9A-Za-z가-힣_]{2,10}$/.test(n);
+
+function authErrMsg(e) {
+  switch (e && e.code) {
+    case "auth/invalid-credential":
+    case "auth/user-not-found":
+    case "auth/wrong-password":
+    case "auth/invalid-email": return "닉네임 또는 비밀번호가 올바르지 않아요.";
+    case "auth/email-already-in-use": return "이미 사용 중인 닉네임이에요.";
+    case "auth/weak-password": return "비밀번호는 6자 이상이어야 해요.";
+    case "auth/too-many-requests": return "시도가 너무 많아요. 잠시 후 다시 해 주세요.";
+    case "auth/network-request-failed": return "네트워크 연결을 확인해 주세요.";
+    case "auth/operation-not-allowed": return "이메일/비밀번호 로그인이 아직 켜지지 않았어요. (Firebase Authentication 설정 필요)";
+    default: return "오류가 났어요: " + ((e && (e.code || e.message)) || "알 수 없음");
+  }
+}
+
+/* ---- 인증 상태 ---- */
+function goLogin() {
+  ME = null;
+  $("menuBtn").hidden = true;
+  $("lErr").textContent = PENDING_MSG; PENDING_MSG = "";
+  $("lPw").value = "";
+  show("login");
+}
+async function onAuth(user) {
+  if (SIGNUP) return;
+  if (!user) {
+    ME = null; $("menuBtn").hidden = true;
+    if (CUR !== "login" && CUR !== "signup") goLogin();
+    return;
+  }
+  try {
+    const s = await FS.getDoc(FS.doc(db, "users", user.uid));
+    if (!s.exists()) {
+      PENDING_MSG = "회원 정보를 찾지 못했어요. 다시 가입해 주세요.";
+      await AU.signOut(auth);
+      return;
+    }
+    ME = Object.assign({ uid: user.uid }, s.data());
+    enterApp();
+  } catch (e) {
+    PENDING_MSG = "회원 정보를 불러오지 못했어요: " + (e.code || e.message);
+    goLogin();
+  }
+}
+function enterApp() {
+  renderChip();
+  $("menuBtn").hidden = false;
+  setIdle();
+  show("ticket");
+}
+function renderChip() {
+  const c = $("meChip");
+  c.innerHTML = "";
+  c.appendChild(dotEl(ME.team));
+  const t = document.createElement("span");
+  t.textContent = ME.nickname + " · " + ME.team;
+  c.appendChild(t);
+}
+
+/* ---- 로그인 ---- */
+$("fLogin").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  $("lErr").textContent = "";
+  if (!auth) { $("lErr").textContent = "아직 연결되지 않았어요. 잠시 후 다시 시도해 주세요."; return; }
+  const nick = $("lNick").value.trim(), pw = $("lPw").value;
+  if (!validNick(nick) || pw.length < 6) { $("lErr").textContent = "닉네임과 비밀번호를 확인해 주세요."; return; }
+  $("lBtn").disabled = true;
+  try { await AU.signInWithEmailAndPassword(auth, emailOf(nick), pw); }
+  catch (err) { $("lErr").textContent = authErrMsg(err); }
+  $("lBtn").disabled = false;
+});
+$("toSignup").addEventListener("click", () => { $("sErr").textContent = ""; show("signup"); });
+$("toLogin").addEventListener("click", () => { $("lErr").textContent = ""; show("login"); });
+
+/* ---- 회원가입 ---- */
+let PICK = "", NICK_OK = "";
+(function buildTeamGrid() {
+  const g = $("teamGrid");
+  TEAMS.forEach((t) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "team"; b.dataset.n = t.n;
+    const d = document.createElement("span"); d.className = "dot"; d.style.background = t.c;
+    b.appendChild(d); b.appendChild(document.createTextNode(t.n));
+    b.addEventListener("click", () => {
+      PICK = t.n;
+      g.querySelectorAll(".team").forEach((x) => x.classList.toggle("sel", x.dataset.n === PICK));
+    });
+    g.appendChild(b);
+  });
+  TEAMS.forEach((t) => { const o = document.createElement("option"); o.value = t.n; o.textContent = t.n; $("myTeam").appendChild(o); });
+})();
+$("showPw").addEventListener("change", (e) => { $("sPw").type = e.target.checked ? "text" : "password"; });
+
+function nickStat(msg, ok) {
+  const s = $("nickStat"); s.textContent = msg || ""; s.classList.toggle("ok", !!ok);
+}
+async function checkNick() {
+  const n = $("sNick").value.trim();
+  NICK_OK = "";
+  if (!validNick(n)) { nickStat("한글·영문·숫자·_ 2~10자로 입력해 주세요.", false); return false; }
+  if (!db) { nickStat("아직 연결되지 않았어요. 잠시 후 다시 시도해 주세요.", false); return false; }
+  try {
+    const s = await FS.getDoc(FS.doc(db, "nicknames", hexOf(nickKey(n))));
+    if (s.exists()) { nickStat("이미 사용 중인 닉네임이에요.", false); return false; }
+    NICK_OK = nickKey(n);
+    nickStat("사용할 수 있는 닉네임이에요.", true);
+    return true;
+  } catch (e) { nickStat("확인하지 못했어요: " + (e.code || e.message), false); return false; }
+}
+$("chkBtn").addEventListener("click", checkNick);
+$("sNick").addEventListener("input", () => { NICK_OK = ""; nickStat(""); });
+
+$("fSignup").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  $("sErr").textContent = "";
+  if (!auth) { $("sErr").textContent = "아직 연결되지 않았어요. 잠시 후 다시 시도해 주세요."; return; }
+  const n = $("sNick").value.trim(), pw = $("sPw").value;
+  if (NICK_OK !== nickKey(n)) { if (!(await checkNick())) return; }
+  if (pw.length < 6) { $("sErr").textContent = "비밀번호는 6자 이상이어야 해요."; return; }
+  if (!PICK) { $("sErr").textContent = "본인 구단을 선택해 주세요."; return; }
+
+  $("sBtn").disabled = true;
+  SIGNUP = true;
+  let cred = null;
+  try {
+    cred = await AU.createUserWithEmailAndPassword(auth, emailOf(n), pw);
+    const uid = cred.user.uid, b = FS.writeBatch(db);
+    b.set(FS.doc(db, "nicknames", hexOf(nickKey(n))), { uid, nickname: n });
+    b.set(FS.doc(db, "users", uid), { nickname: n, team: PICK, createdAt: FS.serverTimestamp() });
+    await b.commit();
+    ME = { uid, nickname: n, team: PICK };
+    SIGNUP = false;
+    $("sPw").value = "";
+    enterApp();
+  } catch (err) {
+    if (cred) { try { await AU.deleteUser(cred.user); } catch (x) {} }
+    SIGNUP = false;
+    $("sErr").textContent = authErrMsg(err);
+    if (err && err.code === "auth/email-already-in-use") nickStat("이미 사용 중인 닉네임이에요.", false);
+  }
+  $("sBtn").disabled = false;
+});
+
+/* ---- 메뉴 ---- */
+$("mMy").addEventListener("click", () => { openMy(); });
+$("mRec").addEventListener("click", () => { openRecords(); });
+$("mOut").addEventListener("click", async () => {
+  closeMenu();
+  if (auth) { try { await AU.signOut(auth); } catch (e) {} }
+});
+
+/* ---- 내 기록 불러오기 ---- */
+let MINE = [];
+async function loadMine() {
+  const snap = await FS.getDocs(FS.query(FS.collection(db, "records"), FS.where("uid", "==", ME.uid), FS.limit(300)));
+  MINE = snap.docs.map((d) => {
+    const x = d.data();
+    return { ms: x.ms, t: (x.createdAt && x.createdAt.toMillis) ? x.createdAt.toMillis() : Date.now() };
+  }).sort((a, b) => b.t - a.t);
+}
+const sec = (ms) => (ms / 1000).toFixed(3) + "초";
+function pad(n) { return String(n).padStart(2, "0"); }
+function fmtDate(t) {
+  const d = new Date(t);
+  return d.getFullYear() + "." + pad(d.getMonth() + 1) + "." + pad(d.getDate()) + " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+}
+function stats() {
+  if (!MINE.length) return { n: 0, best: null, avg: null };
+  const best = Math.min(...MINE.map((r) => r.ms));
+  const avg = MINE.reduce((a, r) => a + r.ms, 0) / MINE.length;
+  return { n: MINE.length, best, avg };
+}
+
+async function openMy() {
+  show("my");
+  $("myNick").textContent = ME.nickname;
+  $("myTeam").value = ME.team;
+  $("myMsg").textContent = "";
+  $("stCnt").textContent = $("stBest").textContent = $("stAvg").textContent = "…";
+  try {
+    await loadMine();
+    const s = stats();
+    $("stCnt").textContent = s.n + "회";
+    $("stBest").textContent = s.n ? sec(s.best) : "-";
+    $("stAvg").textContent = s.n ? sec(s.avg) : "-";
+  } catch (e) {
+    $("stCnt").textContent = $("stBest").textContent = $("stAvg").textContent = "-";
+    $("myMsg").textContent = "기록을 불러오지 못했어요: " + (e.code || e.message);
+  }
+}
+$("teamSave").addEventListener("click", async () => {
+  const t = $("myTeam").value;
+  $("myMsg").classList.remove("ok");
+  try {
+    await FS.updateDoc(FS.doc(db, "users", ME.uid), { team: t });
+    ME.team = t; renderChip();
+    $("myMsg").textContent = "구단을 변경했어요."; $("myMsg").classList.add("ok");
+  } catch (e) { $("myMsg").textContent = "변경하지 못했어요: " + (e.code || e.message); }
+});
+
+async function openRecords() {
+  show("records");
+  $("recSum").textContent = "불러오는 중…";
+  $("recList").innerHTML = ""; $("recMsg").textContent = "";
+  try {
+    await loadMine();
+    const s = stats();
+    $("recSum").textContent = s.n ? ("총 " + s.n + "회 · 최고 " + sec(s.best) + " · 평균 " + sec(s.avg)) : "아직 기록이 없어요.";
+    const list = $("recList");
+    let bestDone = false;
+    MINE.forEach((r, i) => {
+      const row = document.createElement("div"); row.className = "rec";
+      const isBest = !bestDone && r.ms === s.best;
+      if (isBest) { bestDone = true; row.classList.add("best"); }
+      const l = document.createElement("div"); l.innerHTML = "";
+      const a = document.createElement("div"); a.textContent = (isBest ? "🏅 " : "") + sec(r.ms);
+      const d = document.createElement("div"); d.className = "d"; d.textContent = fmtDate(r.t);
+      l.appendChild(a); l.appendChild(d);
+      const no = document.createElement("div"); no.className = "d"; no.textContent = "#" + (MINE.length - i);
+      row.appendChild(l); row.appendChild(no);
+      list.appendChild(row);
+    });
+  } catch (e) {
+    $("recSum").textContent = "";
+    $("recMsg").textContent = "기록을 불러오지 못했어요: " + (e.code || e.message);
+  }
+}
+
+/* ---- 순위판 ---- */
+function renderBoard(ol, snap) {
+  ol.innerHTML = "";
+  if (snap.empty) { const li = document.createElement("li"); li.textContent = "아직 기록이 없어요"; ol.appendChild(li); return; }
   snap.forEach((doc) => {
     const d = doc.data();
     const li = document.createElement("li");
-    li.textContent = d.name + "  " + (d.ms / 1000).toFixed(3) + "초";
-    if (d.name === getName()) li.className = "me";
+    li.appendChild(dotEl(d.team));
+    li.appendChild(document.createTextNode(d.name + "  " + (d.ms / 1000).toFixed(3) + "초"));
+    if (ME && ((d.uid && d.uid === ME.uid) || (!d.uid && d.name === ME.nickname))) li.className = "me";
     ol.appendChild(li);
   });
 }
-
-async function initFirebase() {
-  if (!cfg || !cfg.apiKey || cfg.apiKey.startsWith("YOUR_")) {
-    boardMsg.textContent = "firebase-config.js에 Firebase 설정값이 아직 없어서 기록이 공유되지 않아요.";
-    return;
-  }
-  try {
-    const V = "10.12.2";
-    const [appMod, fsMod] = await Promise.all([
-      import("https://www.gstatic.com/firebasejs/" + V + "/firebase-app.js"),
-      import("https://www.gstatic.com/firebasejs/" + V + "/firebase-firestore.js")
-    ]);
-    const app = appMod.initializeApp(cfg);
-    db = fsMod.getFirestore(app);
-    fs = fsMod;
-    const col = fs.collection(db, "records");
-
-    fs.onSnapshot(
-      fs.query(col, fs.orderBy("ms", "asc"), fs.limit(10)),
-      (snap) => renderBoard(topList, snap),
-      (err) => { boardMsg.textContent = "순위 불러오기 실패: " + err.code; }
-    );
-    fs.onSnapshot(
-      fs.query(col, fs.orderBy("createdAt", "desc"), fs.limit(10)),
-      (snap) => renderBoard(recentList, snap),
-      (err) => { boardMsg.textContent = "최근 기록 불러오기 실패: " + err.code; }
-    );
-  } catch (e) {
-    boardMsg.textContent = "Firebase 연결 실패: " + e.message;
-  }
+function startBoards() {
+  const col = FS.collection(db, "records");
+  FS.onSnapshot(FS.query(col, FS.orderBy("ms", "asc"), FS.limit(10)),
+    (s) => renderBoard($("topList"), s), (e) => { $("boardMsg").textContent = "순위 불러오기 실패: " + e.code; });
+  FS.onSnapshot(FS.query(col, FS.orderBy("createdAt", "desc"), FS.limit(10)),
+    (s) => renderBoard($("recentList"), s), (e) => { $("boardMsg").textContent = "최근 기록 불러오기 실패: " + e.code; });
 }
-
 async function saveRecord(ms) {
-  if (!db) return;
+  if (!db || !ME) return;
   try {
-    await fs.addDoc(fs.collection(db, "records"), {
-      name: getName(),
-      ms: Math.round(ms),
-      createdAt: fs.serverTimestamp()
+    await FS.addDoc(FS.collection(db, "records"), {
+      uid: ME.uid, name: ME.nickname, team: ME.team,
+      ms: Math.round(ms), createdAt: FS.serverTimestamp()
     });
-    boardMsg.textContent = "";
-  } catch (e) {
-    boardMsg.textContent = "기록 저장 실패: " + (e.code || e.message);
-  }
+    $("boardMsg").textContent = "";
+  } catch (e) { $("boardMsg").textContent = "기록 저장 실패: " + (e.code || e.message); }
 }
 
-/* ---------- 상태 전환 ---------- */
+/* ================= 티켓팅 ================= */
+const btn = $("popupBtn"), startBtn = $("startBtn"), statusEl = $("status"), msgEl = $("msg");
+const popupLayer = $("popupLayer"), elapsedElement = $("elapsed"), detailEl = $("detail");
+const secSel = $("secSel");
+
+let timer = null;
+let phase = "idle";      // idle → counting → ready → done
+let activationTime = 0;
+let earlyCount = 0;
+
 function setIdle() {
-  clearInterval(timer);
-  timer = null;
-  phase = "idle";
-  earlyCount = 0;
-  btn.className = "";
-  msgEl.textContent = "";
+  clearInterval(timer); timer = null;
+  phase = "idle"; earlyCount = 0;
+  btn.className = ""; msgEl.textContent = "";
   statusEl.className = "idle";
-  statusEl.textContent = "이름 입력 후 시작 버튼을 누르세요";
-  startBtn.textContent = hasPlayed ? "다시 시작" : "시작";
-  startBtn.disabled = false;
-  nameInput.disabled = false;   // 대기 중에는 이름 수정/삭제 가능
-  secSel.disabled = false;
+  statusEl.textContent = "시작 버튼을 누르세요";
+  startBtn.disabled = false; secSel.disabled = false;
 }
-
+function leaveTicket() {
+  popupLayer.style.display = "none";
+  setIdle();
+}
 function startCountdown(seconds) {
   clearInterval(timer);
-  phase = "counting";
-  earlyCount = 0;
-  msgEl.textContent = "";
-  btn.className = "";
-  statusEl.className = "";
-  startBtn.disabled = true;
-  nameInput.disabled = true;
-  secSel.disabled = true;
-  nameInput.blur();             // 키보드 닫기
-
+  phase = "counting"; earlyCount = 0;
+  msgEl.textContent = ""; btn.className = ""; statusEl.className = "";
+  startBtn.disabled = true; secSel.disabled = true;
   const endTime = performance.now() + seconds * 1000;
-
   function update() {
     const remaining = Math.max(0, endTime - performance.now());
     statusEl.textContent = (remaining / 1000).toFixed(3) + "초";
     if (remaining <= 0) {
-      clearInterval(timer);
-      timer = null;
-      phase = "ready";
-      activationTime = performance.now();
+      clearInterval(timer); timer = null;
+      phase = "ready"; activationTime = performance.now();
       btn.className = "ready";
       statusEl.textContent = "지금 누르세요!";
     }
@@ -290,20 +606,8 @@ function startCountdown(seconds) {
   update();
   timer = setInterval(update, 10);
 }
-
-function renderMine() {
-  if (records.length === 0) { sumEl.textContent = "기록 없음"; return; }
-  const best = Math.min(...records);
-  const avg = records.reduce((a, b) => a + b, 0) / records.length;
-  sumEl.textContent = "최고 " + (best / 1000).toFixed(3) + "초 · 평균 " +
-    (avg / 1000).toFixed(3) + "초 · " + records.length + "회";
-}
-
 function handlePress() {
-  if (phase === "idle") {
-    msgEl.textContent = "시작 버튼을 먼저 누르세요";
-    return;
-  }
+  if (phase === "idle") { msgEl.textContent = "시작 버튼을 먼저 누르세요"; return; }
   if (phase === "counting") {
     earlyCount++;
     btn.classList.add("early");
@@ -315,42 +619,22 @@ function handlePress() {
 
   const clickTime = performance.now();
   const reaction = clickTime - activationTime;
-  phase = "done";
-  hasPlayed = true;
-  btn.className = "";
-
+  phase = "done"; btn.className = "";
   popupLayer.style.display = "flex";
-  elapsedElement.textContent = "계산 중...";
-  detailEl.textContent = "";
-
+  elapsedElement.textContent = "계산 중..."; detailEl.textContent = "";
   requestAnimationFrame(() => {
     const popupMs = performance.now() - clickTime;
     elapsedElement.textContent = ((reaction + popupMs) / 1000).toFixed(3) + "초";
-    detailEl.textContent =
-      "누르기까지 " + (reaction / 1000).toFixed(3) + "초 + 팝업 표시 " + popupMs.toFixed(0) + "ms" +
+    detailEl.textContent = "누르기까지 " + (reaction / 1000).toFixed(3) + "초 + 팝업 표시 " + popupMs.toFixed(0) + "ms" +
       (earlyCount ? " · 일찍 누름 " + earlyCount + "회" : "");
   });
-
-  records.push(reaction);
-  renderMine();
   saveRecord(reaction);
 }
-
 btn.addEventListener("pointerdown", (e) => { e.preventDefault(); handlePress(); });
 btn.addEventListener("click", (e) => { if (e.detail === 0) handlePress(); });
+startBtn.addEventListener("click", () => { if (phase === "idle") startCountdown(Number(secSel.value)); });
+$("closeBtn").addEventListener("click", () => { popupLayer.style.display = "none"; setIdle(); });
 
-startBtn.addEventListener("click", () => {
-  if (phase === "idle") startCountdown(Number(secSel.value));
-});
-
-closeBtn.addEventListener("click", () => {
-  popupLayer.style.display = "none";
-  setIdle();
-});
-
-resetBtn.addEventListener("click", () => { records = []; renderMine(); });
-
-setIdle();
 initFirebase();
 </script>
 </body>
