@@ -98,6 +98,25 @@ h2.pt { font-family: "Black Han Sans", "Noto Sans KR", sans-serif; font-style: i
 #msg { min-height: 26px; margin: 14px 0 6px; font-size: 17px; color: #dc2626; font-weight: bold; }
 #boardMsg { font-size: 14px; color: #b45309; margin-top: 8px; }
 
+/* 실전 티켓팅 연습 */
+.practice-card { background:#fff; border:1px solid var(--line); border-radius:18px; padding:16px; margin:14px 0; text-align:left; box-shadow:0 4px 18px rgba(91,18,224,.07); }
+.practice-card h3 { margin:0 0 8px; color:var(--navy); }
+.practice-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.practice-action { width:100%; min-height:52px; padding:12px; font-size:17px; font-weight:800; }
+.practice-status { background:var(--lav); border-radius:14px; padding:24px 12px; text-align:center; margin:14px 0; }
+.practice-status strong { display:block; font-size:30px; color:var(--p); font-variant-numeric:tabular-nums; }
+.seat-grid { display:grid; grid-template-columns:repeat(8,minmax(0,1fr)); gap:6px; margin:14px 0; }
+.seat { min-width:0; aspect-ratio:1; border-radius:7px; background:var(--p2); color:white; font-size:12px; font-weight:800; padding:0; }
+.seat.sold { background:#d6d3df; color:#858198; cursor:not-allowed; }
+.seat.selected { background:var(--y); color:var(--navy); outline:2px solid var(--p); }
+.seat-legend { display:flex; flex-wrap:wrap; gap:12px; font-size:12px; color:var(--mut); }
+.seat-legend span:before { content:""; display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:5px; background:var(--p2); }
+.seat-legend .sold-key:before { background:#d6d3df; }
+.seat-legend .sel-key:before { background:var(--y); }
+.result-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.result-item { background:var(--lav); border-radius:12px; padding:12px; }
+.result-item span { display:block; color:var(--mut); font-size:12px; }
+.result-item b { display:block; color:var(--navy); font-size:20px; margin-top:4px; }
 /* 기록 행: 닉네임 / 응원팀 / 기록 */
 .rrow { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: 8px; align-items: center; padding: 9px 0; border-bottom: 1px solid #f0ecfb; font-size: 15px; }
 .rrow.rk { grid-template-columns: 26px minmax(0,1fr) auto auto; }
@@ -236,7 +255,56 @@ h2.pt { font-family: "Black Han Sans", "Noto Sans KR", sans-serif; font-style: i
   <!-- 티켓팅 -->
   <section id="vTicket" class="view" hidden>
     <div class="chip" id="meChip"></div>
-    <div class="row">
+
+    <div class="practice-card" id="practiceSetup">
+      <h3>🎟️ 실전 티켓팅 연습</h3>
+      <p class="hint">랜덤 오픈 순간에 반응하고, 좌석 배치도에서 원하는 자리를 선택해 보세요.</p>
+      <div class="field"><label for="randomRange">랜덤 오픈 대기 범위</label>
+        <select id="randomRange"><option value="5,20">5~20초</option><option value="10,30">10~30초</option><option value="15,45">15~45초</option><option value="30,60">30~60초</option></select>
+      </div>
+      <div class="field"><label for="seatLevel">좌석 난이도</label>
+        <select id="seatLevel"><option value="easy">쉬움 · 좌석 여유</option><option value="normal" selected>보통 · 일부 매진</option><option value="hard">어려움 · 인기 좌석 중심</option></select>
+      </div>
+      <div class="field"><label for="seatCount">선택할 좌석 수</label>
+        <select id="seatCount"><option value="1">1석</option><option value="2">2석 연석</option></select>
+      </div>
+      <button class="pri practice-action" id="practiceStart">실전 연습 시작</button>
+    </div>
+
+    <div class="practice-card" id="practiceWaiting" hidden>
+      <h3>⏳ 예매 오픈 대기 중</h3>
+      <div class="practice-status"><strong id="randomStatus">READY?</strong><span id="randomHint">오픈 시간을 예측할 수 없습니다.</span></div>
+      <button class="practice-action" id="randomOpenBtn" disabled style="background:#d9d4ea;color:#8b87a8">예매 시작</button>
+      <div id="practiceMsg" class="err"></div>
+      <button class="link" id="practiceCancel">연습 취소</button>
+    </div>
+
+    <div class="practice-card" id="practiceSeats" hidden>
+      <h3>좌석 선택</h3>
+      <p class="hint">무대 앞쪽부터 좌석이 배치되어 있어요. 원하는 좌석을 선택하세요.</p>
+      <div style="background:var(--lav);padding:10px;border-radius:10px;text-align:center;font-weight:800;color:var(--navy)">STAGE · 무대</div>
+      <div class="seat-legend"><span>선택 가능</span><span class="sold-key">매진</span><span class="sel-key">내 선택</span></div>
+      <div id="seatGrid" class="seat-grid"></div>
+      <div class="hint" id="seatPickInfo">선택한 좌석이 없습니다.</div>
+      <button class="pri practice-action" id="seatConfirm" disabled>선택 완료</button>
+      <button class="link" id="seatBack">연습 취소</button>
+    </div>
+
+    <div class="practice-card" id="practiceResult" hidden>
+      <h3>🏆 연습 결과</h3>
+      <div id="practiceResultTitle" style="font-size:22px;font-weight:800;color:var(--p);margin:12px 0">연습 완료</div>
+      <div class="result-grid">
+        <div class="result-item"><span>오픈 반응속도</span><b id="resultReaction">-</b></div>
+        <div class="result-item"><span>좌석 선택 시간</span><b id="resultSeatTime">-</b></div>
+        <div class="result-item"><span>총 소요 시간</span><b id="resultTotal">-</b></div>
+        <div class="result-item"><span>선택 좌석</span><b id="resultSeat">-</b></div>
+      </div>
+      <button class="pri practice-action" id="practiceAgain" style="margin-top:14px">다시 연습하기</button>
+    </div>
+
+    <details class="practice-card">
+      <summary style="font-weight:800;color:var(--navy);cursor:pointer">⚡ 기존 간단 반응속도 연습</summary>
+    <div class="row" style="margin-top:14px">
       <label for="secSel">대기</label>
       <select id="secSel">
         <option value="5">5초</option>
@@ -251,6 +319,7 @@ h2.pt { font-family: "Black Han Sans", "Noto Sans KR", sans-serif; font-style: i
       <button id="popupBtn">팝업 열기</button>
     </div>
     <div id="msg"></div>
+    </details>
 
     <div class="box"><h3>🏆 전체 순위 TOP 10</h3><div id="topList"></div></div>
     <div class="box"><h3>🕒 최근 기록 10개</h3><div id="recentList"></div><div id="boardMsg"></div></div>
@@ -845,6 +914,125 @@ async function openRecords() {
   }
 }
 
+/* ================= 실전 티켓팅 연습 ================= */
+let practiceTimer = null;
+let practicePhase = "idle";
+let practiceOpenedAt = 0;
+let practiceSeatStartedAt = 0;
+let practiceReactionMs = 0;
+let practiceSelected = [];
+let practiceSeatData = [];
+let practiceRequiredSeats = 1;
+let practiceDifficulty = "normal";
+let practiceEarlyCount = 0;
+const practicePanels = ["practiceSetup", "practiceWaiting", "practiceSeats", "practiceResult"];
+function showPracticePanel(id) { practicePanels.forEach(x => $(x).hidden = x !== id); }
+function resetPractice() {
+  clearTimeout(practiceTimer); practiceTimer = null; practicePhase = "idle";
+  practiceSelected = []; practiceEarlyCount = 0;
+  $("randomOpenBtn").disabled = true; $("randomOpenBtn").style.background = "#d9d4ea"; $("randomOpenBtn").style.color = "#8b87a8";
+  $("randomOpenBtn").textContent = "예매 시작";
+  $("practiceMsg").textContent = ""; $("randomStatus").textContent = "READY?";
+  showPracticePanel("practiceSetup");
+}
+function beginPractice() {
+  const [minSec,maxSec] = $("randomRange").value.split(",").map(Number);
+  practiceRequiredSeats = Number($("seatCount").value);
+  practiceDifficulty = $("seatLevel").value;
+  const waitMs = (minSec + Math.random() * (maxSec - minSec)) * 1000;
+  practicePhase = "waiting"; practiceEarlyCount = 0;
+  showPracticePanel("practiceWaiting");
+  $("randomStatus").textContent = "예매 대기 중";
+  $("randomHint").textContent = "화면을 보고 있다가 버튼이 활성화되면 바로 누르세요.";
+  const deadline = performance.now() + waitMs;
+  const update = () => {
+    const left = Math.max(0, deadline - performance.now());
+    $("randomStatus").textContent = (left / 1000).toFixed(2) + "초";
+    if (left <= 0) {
+      practicePhase = "open"; practiceOpenedAt = performance.now();
+      $("randomStatus").textContent = "OPEN!";
+      $("randomHint").textContent = "지금 예매 시작 버튼을 누르세요!";
+      $("randomOpenBtn").disabled = false; $("randomOpenBtn").style.background = "#16a34a"; $("randomOpenBtn").style.color = "#fff";
+      $("randomOpenBtn").textContent = "예매 시작";
+      return;
+    }
+    practiceTimer = setTimeout(update, Math.min(40, left));
+  };
+  practiceTimer = setTimeout(update, Math.min(40, waitMs));
+}
+function makeSeatMap() {
+  const soldRates = {easy:.08, normal:.28, hard:.52};
+  practiceSeatData = [];
+  const grid = $("seatGrid"); grid.innerHTML = "";
+  for (let r=0;r<6;r++) for (let c=1;c<=8;c++) {
+    const id = String.fromCharCode(65+r) + c;
+    const sold = Math.random() < soldRates[practiceDifficulty];
+    practiceSeatData.push({id,sold});
+    const b = document.createElement("button"); b.type="button"; b.className="seat" + (sold?" sold":"");
+    b.textContent = c; b.title = id; b.disabled = sold;
+    b.addEventListener("click",()=>togglePracticeSeat(id));
+    b.dataset.seat = id; grid.appendChild(b);
+  }
+  practiceSelected = []; updatePracticeSeatInfo();
+}
+function togglePracticeSeat(id) {
+  if (practicePhase !== "seats") return;
+  const idx = practiceSelected.indexOf(id);
+  if (idx >= 0) practiceSelected.splice(idx,1);
+  else if (practiceSelected.length < practiceRequiredSeats) {
+    if (practiceRequiredSeats === 2 && practiceSelected.length === 1) {
+      const first = practiceSelected[0];
+      const a = first.charCodeAt(0), b = id.charCodeAt(0);
+      const n1 = Number(first.slice(1)), n2 = Number(id.slice(1));
+      if (a !== b || Math.abs(n1-n2)!==1) { $("practiceMsg").textContent="연석은 같은 줄의 붙어 있는 좌석을 선택해야 해요."; return; }
+      const other = practiceSeatData.find(x=>x.id===id);
+      if (!other || other.sold) return;
+    }
+    practiceSelected.push(id);
+  }
+  document.querySelectorAll(".seat").forEach(b=>b.classList.toggle("selected",practiceSelected.includes(b.dataset.seat)));
+  updatePracticeSeatInfo();
+}
+function updatePracticeSeatInfo() {
+  $("seatPickInfo").textContent = practiceSelected.length ? "선택한 좌석: " + practiceSelected.join(", ") : "선택한 좌석이 없습니다.";
+  $("seatConfirm").disabled = practiceSelected.length !== practiceRequiredSeats;
+}
+function openPracticeSeats() {
+  practicePhase = "seats"; practiceSeatStartedAt = performance.now();
+  showPracticePanel("practiceSeats"); makeSeatMap();
+}
+async function finishPractice() {
+  const seatMs = performance.now() - practiceSeatStartedAt;
+  const totalMs = practiceReactionMs + seatMs;
+  $("practiceResultTitle").textContent = "좌석 선택 성공!";
+  $("resultReaction").textContent = sec(practiceReactionMs);
+  $("resultSeatTime").textContent = sec(seatMs);
+  $("resultTotal").textContent = sec(totalMs);
+  $("resultSeat").textContent = practiceSelected.join(", ");
+  showPracticePanel("practiceResult"); practicePhase = "done";
+  if (db && ME) {
+    try {
+      await FS.addDoc(FS.collection(db,"practiceRecords"), {
+        uid:ME.uid, name:ME.nickname, team:ME.team,
+        reactionMs:Math.round(practiceReactionMs), seatMs:Math.round(seatMs), totalMs:Math.round(totalMs),
+        seats:practiceSelected.slice(), seatCount:practiceRequiredSeats, difficulty:practiceDifficulty,
+        earlyCount:practiceEarlyCount, success:true, createdAt:FS.serverTimestamp()
+      });
+    } catch(e) { $("practiceResultTitle").textContent = "좌석 선택 성공! (기록 저장은 실패했어요)"; }
+  }
+}
+$("practiceStart").addEventListener("click",beginPractice);
+$("randomOpenBtn").addEventListener("click",()=>{
+  if (practicePhase !== "open") return;
+  practiceReactionMs = performance.now() - practiceOpenedAt;
+  $("randomOpenBtn").disabled = true;
+  openPracticeSeats();
+});
+$("practiceCancel").addEventListener("click",resetPractice);
+$("seatBack").addEventListener("click",resetPractice);
+$("seatConfirm").addEventListener("click",finishPractice);
+$("practiceAgain").addEventListener("click",resetPractice);
+
 /* ================= 티켓팅 연습 (기존 화면 유지) ================= */
 const btn = $("popupBtn"), startBtn = $("startBtn"), statusEl = $("status"), msgEl = $("msg");
 const popupLayer = $("popupLayer"), elapsedElement = $("elapsed"), detailEl = $("detail");
@@ -866,6 +1054,8 @@ function setIdle() {
 function leaveTicket() {
   popupLayer.style.display = "none";
   setIdle();
+  clearTimeout(practiceTimer); practiceTimer = null;
+  if (typeof practicePhase !== "undefined" && practicePhase !== "idle") resetPractice();
 }
 function startCountdown(seconds) {
   clearInterval(timer);
