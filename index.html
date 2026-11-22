@@ -182,6 +182,12 @@ h2.pt { font-family: "Black Han Sans", "Noto Sans KR", sans-serif; font-style: i
 #elapsed { font-size: clamp(32px, 9vw, 46px); font-weight: 800; color: var(--p); margin: 24px 0 8px; word-break: keep-all; font-variant-numeric: tabular-nums; }
 #detail { font-size: 15px; color: var(--mut); margin-bottom: 24px; }
 #closeBtn { width: 100%; min-height: 72px; font-size: 24px; font-weight: bold; }
+#captchaLayer { display:none; position:fixed; inset:0; z-index:1100; background:rgba(12,12,89,.68); justify-content:center; align-items:center; padding:20px; }
+#captchaLayer .captcha-box { width:100%; max-width:420px; padding:24px 20px; border-radius:20px; background:#fff; text-align:center; box-shadow:0 18px 55px rgba(0,0,0,.25); }
+#captchaCode { margin:18px 0; padding:18px 10px; border:2px dashed #8b5cf6; border-radius:12px; background:repeating-linear-gradient(135deg,#f4efff,#f4efff 8px,#fff 8px,#fff 16px); color:#28105f; font-size:34px; font-weight:900; letter-spacing:9px; font-variant-numeric:tabular-nums; user-select:none; }
+#captchaInput { width:100%; box-sizing:border-box; padding:14px; border:1px solid var(--line); border-radius:10px; font-size:20px; text-align:center; letter-spacing:5px; }
+#captchaMsg { min-height:22px; margin:9px 0; color:#dc2626; font-size:14px; font-weight:700; }
+#captchaSubmit { width:100%; min-height:50px; }
 </style>
 <script src="firebase-config.js"></script>
 </head>
@@ -258,7 +264,10 @@ h2.pt { font-family: "Black Han Sans", "Noto Sans KR", sans-serif; font-style: i
 
     <div class="practice-card" id="practiceSetup">
       <h3>🎟️ 실전 티켓팅 연습</h3>
-      <p class="hint">예매 시작 버튼을 누른 뒤 랜덤 보안문자를 입력하고 좌석을 선택해 보세요.</p>
+      <p class="hint">랜덤 오픈 순간에 반응하고, 좌석 배치도에서 원하는 자리를 선택해 보세요.</p>
+      <div class="field"><label for="randomRange">랜덤 오픈 대기 범위</label>
+        <select id="randomRange"><option value="5,20">5~20초</option><option value="10,30">10~30초</option><option value="15,45">15~45초</option><option value="30,60">30~60초</option></select>
+      </div>
       <div class="field"><label for="seatLevel">좌석 난이도</label>
         <select id="seatLevel"><option value="easy">쉬움 · 좌석 여유</option><option value="normal" selected>보통 · 일부 매진</option><option value="hard">어려움 · 인기 좌석 중심</option></select>
       </div>
@@ -269,9 +278,9 @@ h2.pt { font-family: "Black Han Sans", "Noto Sans KR", sans-serif; font-style: i
     </div>
 
     <div class="practice-card" id="practiceWaiting" hidden>
-      <h3>🎫 예매 준비 완료</h3>
-      <div class="practice-status"><strong id="randomStatus">READY!</strong><span id="randomHint">버튼을 누르면 보안문자가 나타납니다.</span></div>
-      <button class="practice-action pri" id="randomOpenBtn">예매 시작</button>
+      <h3>⏳ 예매 오픈 대기 중</h3>
+      <div class="practice-status"><strong id="randomStatus">READY?</strong><span id="randomHint">오픈 시간을 예측할 수 없습니다.</span></div>
+      <button class="practice-action" id="randomOpenBtn" disabled style="background:#d9d4ea;color:#8b87a8">예매 시작</button>
       <div id="practiceMsg" class="err"></div>
       <button class="link" id="practiceCancel">연습 취소</button>
     </div>
@@ -318,6 +327,8 @@ h2.pt { font-family: "Black Han Sans", "Noto Sans KR", sans-serif; font-style: i
     <div id="msg"></div>
     </details>
 
+    <div class="box"><h3>🏆 전체 순위 TOP 10</h3><div id="topList"></div></div>
+    <div class="box"><h3>🕒 최근 기록 10개</h3><div id="recentList"></div><div id="boardMsg"></div></div>
   </section>
 
   <!-- 랭킹 -->
@@ -331,8 +342,6 @@ h2.pt { font-family: "Black Han Sans", "Noto Sans KR", sans-serif; font-style: i
       <div class="err" id="rkMsg"></div>
     </div>
     <div class="hint">개인 최고 기록 기준 · 상위 200개 기록 안에서 표시돼요.</div>
-    <div class="box"><h3>🏆 전체 순위 TOP 10</h3><div id="topList"></div></div>
-    <div class="box"><h3>🕒 최근 기록 10개</h3><div id="recentList"></div><div id="boardMsg"></div></div>
   </section>
 
   <!-- 서버시간 -->
@@ -395,23 +404,23 @@ h2.pt { font-family: "Black Han Sans", "Noto Sans KR", sans-serif; font-style: i
   <button data-tab="my"><svg viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>마이페이지</button>
 </nav>
 
-<div id="captchaLayer" role="dialog" aria-modal="true" aria-labelledby="captchaTitle" style="display:none;position:fixed;inset:0;background:rgba(12,12,89,.65);z-index:1100;align-items:center;justify-content:center;padding:20px">
-  <div class="popup">
-    <h2 id="captchaTitle">보안문자를 입력하세요</h2>
-    <div id="captchaCode" style="margin:22px auto;padding:18px 12px;max-width:260px;border:2px dashed var(--p);border-radius:12px;background:var(--lav);font-size:32px;font-weight:900;letter-spacing:8px;color:var(--navy);user-select:none"></div>
-    <div class="field"><label for="captchaInput">위에 표시된 문자 입력</label><input id="captchaInput" type="text" maxlength="6" autocomplete="off" autocapitalize="characters" placeholder="보안문자 6자리"></div>
-    <div id="captchaMsg" class="err" aria-live="polite"></div>
-    <button id="captchaSubmit" class="pri practice-action">확인</button>
-    <button id="captchaRefresh" class="link" type="button">새 보안문자</button>
-  </div>
-</div>
-
 <div id="popupLayer" role="dialog" aria-modal="true" aria-labelledby="popupTitle">
   <div class="popup">
     <h2 id="popupTitle">총 경과 시간</h2>
     <div id="elapsed">계산 중...</div>
     <div id="detail"></div>
     <button id="closeBtn" class="pri">닫기</button>
+  </div>
+</div>
+
+<div id="captchaLayer" role="dialog" aria-modal="true" aria-labelledby="captchaTitle">
+  <div class="captcha-box">
+    <h2 id="captchaTitle">보안문자를 입력해 주세요</h2>
+    <p class="hint">화면에 표시된 숫자를 그대로 입력하세요.</p>
+    <div id="captchaCode" aria-label="보안문자"></div>
+    <input id="captchaInput" type="text" inputmode="numeric" autocomplete="off" maxlength="6" placeholder="숫자 6자리 입력">
+    <div id="captchaMsg" aria-live="polite"></div>
+    <button id="captchaSubmit" class="pri">확인</button>
   </div>
 </div>
 
@@ -923,43 +932,64 @@ async function openRecords() {
 }
 
 /* ================= 실전 티켓팅 연습 ================= */
+let practiceTimer = null;
 let practicePhase = "idle";
-let practiceStartedAt = 0;
+let practiceOpenedAt = 0;
 let practiceSeatStartedAt = 0;
 let practiceReactionMs = 0;
 let practiceSelected = [];
 let practiceSeatData = [];
 let practiceRequiredSeats = 1;
 let practiceDifficulty = "normal";
-let practiceCaptchaAnswer = "";
+let practiceEarlyCount = 0;
 const practicePanels = ["practiceSetup", "practiceWaiting", "practiceSeats", "practiceResult"];
 function showPracticePanel(id) { practicePanels.forEach(x => $(x).hidden = x !== id); }
-function closeCaptcha() { $("captchaLayer").style.display = "none"; $("captchaInput").value = ""; }
-function makeCaptcha() {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  practiceCaptchaAnswer = Array.from({length:6}, () => chars[Math.floor(Math.random()*chars.length)]).join("");
-  $("captchaCode").textContent = practiceCaptchaAnswer;
+let practiceCaptchaCode = "";
+function createPracticeCaptcha() {
+  // 100000~999999 범위의 무작위 숫자 6자리
+  practiceCaptchaCode = String(Math.floor(100000 + Math.random() * 900000));
+  $("captchaCode").textContent = practiceCaptchaCode;
   $("captchaInput").value = "";
   $("captchaMsg").textContent = "";
-  $("captchaLayer").style.display = "flex";
-  setTimeout(() => $("captchaInput").focus(), 50);
+}
+function closePracticeCaptcha() {
+  $("captchaLayer").style.display = "none";
 }
 function resetPractice() {
-  closeCaptcha(); practicePhase = "idle"; practiceSelected = [];
-  $("randomOpenBtn").disabled = false; $("randomOpenBtn").textContent = "예매 시작";
-  $("practiceMsg").textContent = ""; $("randomStatus").textContent = "READY!";
-  $("randomHint").textContent = "버튼을 누르면 보안문자가 나타납니다.";
+  clearTimeout(practiceTimer); practiceTimer = null; practicePhase = "idle";
+  practiceSelected = []; practiceEarlyCount = 0; practiceCaptchaCode = "";
+  closePracticeCaptcha();
+  $("randomOpenBtn").disabled = true; $("randomOpenBtn").style.background = "#d9d4ea"; $("randomOpenBtn").style.color = "#8b87a8";
+  $("randomOpenBtn").textContent = "예매 시작";
+  $("practiceMsg").textContent = ""; $("randomStatus").textContent = "READY?";
   showPracticePanel("practiceSetup");
 }
 function beginPractice() {
   practiceRequiredSeats = Number($("seatCount").value);
   practiceDifficulty = $("seatLevel").value;
-  practicePhase = "ready";
-  practiceStartedAt = performance.now();
-  $("randomOpenBtn").disabled = false;
-  $("randomStatus").textContent = "READY!";
-  $("randomHint").textContent = "예매 시작 버튼을 누르세요.";
+  const waitMs = 5000;
+  practicePhase = "waiting"; practiceEarlyCount = 0;
   showPracticePanel("practiceWaiting");
+  $("randomOpenBtn").disabled = true;
+  $("randomOpenBtn").style.background = "#d9d4ea";
+  $("randomOpenBtn").style.color = "#8b87a8";
+  $("randomStatus").textContent = "5.00초";
+  $("randomHint").textContent = "5초 카운트다운이 끝나면 예매 시작 버튼이 활성화됩니다.";
+  const deadline = performance.now() + waitMs;
+  const update = () => {
+    const left = Math.max(0, deadline - performance.now());
+    $("randomStatus").textContent = (left / 1000).toFixed(2) + "초";
+    if (left <= 0) {
+      practicePhase = "open"; practiceOpenedAt = performance.now();
+      $("randomStatus").textContent = "OPEN!";
+      $("randomHint").textContent = "버튼을 누르면 랜덤 보안문자가 표시됩니다.";
+      $("randomOpenBtn").disabled = false; $("randomOpenBtn").style.background = "#16a34a"; $("randomOpenBtn").style.color = "#fff";
+      $("randomOpenBtn").textContent = "예매 시작";
+      return;
+    }
+    practiceTimer = setTimeout(update, Math.min(40, left));
+  };
+  practiceTimer = setTimeout(update, Math.min(40, waitMs));
 }
 function makeSeatMap() {
   const soldRates = {easy:.08, normal:.28, hard:.52};
@@ -1011,49 +1041,43 @@ async function finishPractice() {
   $("resultTotal").textContent = sec(totalMs);
   $("resultSeat").textContent = practiceSelected.join(", ");
   showPracticePanel("practiceResult"); practicePhase = "done";
-  if (!db || !FS || !ME || !ME.uid) {
-    $("practiceResultTitle").textContent = "좌석 선택 성공! (로그인/Firebase 연결을 확인해 주세요)";
-    $("practiceMsg").textContent = "기록 저장 조건을 확인할 수 없습니다.";
-    return;
-  }
-  try {
-    const record = {
-      uid: ME.uid, nickname: ME.nickname || ME.name || "사용자", team: ME.team || "",
-      reactionMs: Math.round(practiceReactionMs), seatMs: Math.round(seatMs), totalMs: Math.round(totalMs),
-      seats: practiceSelected.slice(), seatCount: practiceRequiredSeats, difficulty: practiceDifficulty,
-      success: true, createdAt: FS.serverTimestamp()
-    };
-    await FS.addDoc(FS.collection(db, "practiceRecords"), record);
-    $("practiceResultTitle").textContent = "좌석 선택 성공! 기록이 저장됐어요.";
-  } catch(e) {
-    console.error("practiceRecords 저장 실패", e);
-    $("practiceResultTitle").textContent = "좌석 선택 성공! 기록 저장은 실패했어요.";
-    $("practiceMsg").textContent = "저장 오류: " + (e.code || "알 수 없는 오류") + (e.message ? " · " + e.message : "");
+  if (db && ME) {
+    try {
+      await FS.addDoc(FS.collection(db,"practiceRecords"), {
+        uid:ME.uid, name:ME.nickname, team:ME.team,
+        reactionMs:Math.round(practiceReactionMs), seatMs:Math.round(seatMs), totalMs:Math.round(totalMs),
+        seats:practiceSelected.slice(), seatCount:practiceRequiredSeats, difficulty:practiceDifficulty,
+        earlyCount:practiceEarlyCount, success:true, createdAt:FS.serverTimestamp()
+      });
+    } catch(e) { $("practiceResultTitle").textContent = "좌석 선택 성공! (기록 저장은 실패했어요)"; }
   }
 }
 $("practiceStart").addEventListener("click",beginPractice);
 $("randomOpenBtn").addEventListener("click",()=>{
-  if (practicePhase !== "ready") return;
-  practiceReactionMs = performance.now() - practiceStartedAt;
+  if (practicePhase !== "open") return;
+  // 반응속도는 5초 카운트다운 종료 후 예매 시작 버튼을 누른 시점으로 측정
+  practiceReactionMs = performance.now() - practiceOpenedAt;
   practicePhase = "captcha";
   $("randomOpenBtn").disabled = true;
-  $("randomStatus").textContent = "보안문자 확인";
-  $("randomHint").textContent = "화면에 표시된 6자리 문자를 입력하세요.";
-  makeCaptcha();
+  createPracticeCaptcha();
+  $("captchaLayer").style.display = "flex";
+  $("captchaInput").focus();
 });
-$("captchaRefresh").addEventListener("click",makeCaptcha);
-function submitCaptcha() {
+function submitPracticeCaptcha() {
   if (practicePhase !== "captcha") return;
-  if ($("captchaInput").value.trim().toUpperCase() !== practiceCaptchaAnswer) {
-    $("captchaMsg").textContent = "보안문자가 일치하지 않습니다. 다시 입력해 주세요.";
-    makeCaptcha();
-    $("captchaMsg").textContent = "보안문자가 일치하지 않습니다. 새 문자를 입력해 주세요.";
+  const answer = $("captchaInput").value.trim();
+  if (answer !== practiceCaptchaCode) {
+    $("captchaMsg").textContent = "보안문자가 일치하지 않아요. 다시 입력해 주세요.";
+    $("captchaInput").select();
     return;
   }
-  closeCaptcha(); openPracticeSeats();
+  closePracticeCaptcha();
+  openPracticeSeats();
 }
-$("captchaSubmit").addEventListener("click",submitCaptcha);
-$("captchaInput").addEventListener("keydown",e=>{ if(e.key==="Enter") submitCaptcha(); });
+$("captchaSubmit").addEventListener("click",submitPracticeCaptcha);
+$("captchaInput").addEventListener("keydown",(event)=>{
+  if (event.key === "Enter") submitPracticeCaptcha();
+});
 $("practiceCancel").addEventListener("click",resetPractice);
 $("seatBack").addEventListener("click",resetPractice);
 $("seatConfirm").addEventListener("click",finishPractice);
